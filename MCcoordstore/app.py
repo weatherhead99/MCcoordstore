@@ -8,10 +8,13 @@ Created on Thu Dec  9 18:23:28 2021
 
 from flask import Flask, render_template, request
 import numpy as np
-from plots import LocationsPlot
+from .plots import LocationsPlot
 from markupsafe import Markup
 
-app = Flask(__name__)
+from MCcoordstore import create_app
+
+app = create_app()
+
 
 @app.route("/")
 def index():

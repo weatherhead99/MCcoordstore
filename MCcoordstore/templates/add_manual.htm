@@ -1,0 +1,23 @@
+{% extends "base.htm" %}
+
+{% block content %}
+<h1> Add POI manually </h1>
+
+<form method="post">
+  <label for="name">Name</label>
+  <input for="name" required>
+
+  <label for="x">x: </label>
+  <input for="x" type="number" required>
+
+  <label for="y">y: </label>
+  <input for="y" type="number" required>
+
+  <label for="z">z: </label>
+  <input for="z" type="number" required>
+
+  <input type="Submit">
+</form>
+
+
+{% endblock %}
