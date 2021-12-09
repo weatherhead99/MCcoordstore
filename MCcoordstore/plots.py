@@ -21,8 +21,7 @@ class LocationsPlot:
         self.colors = []
         self._needs_render: Union[bool,None] = None
         self._rendered_html = None
-        
-        
+
     def update_plot(self):
         if self.scatter is None:
             self.scatter = self.ax.scatter(self.xdat, self.zdat)

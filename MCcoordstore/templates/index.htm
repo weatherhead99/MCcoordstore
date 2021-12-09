@@ -1,8 +1,10 @@
-<!DOCTYPE html>
-<html>
-  <h1>Minecraft Points of Interest </h1>
-  {% if map_html_2d %}
-  {{map_html_2d}}
-  {% endif %}
+{% extends "base.htm" %}
 
-</html>
+{% block content %}
+<h1>Minecraft Points of Interest </h1>
+    {% if map_html_2d %}
+    {{map_html_2d}}
+    {% endif %}
+
+{% endblock %}
+
