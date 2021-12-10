@@ -82,14 +82,7 @@ def get_db(app):
     return db
 
 
-
-@click.command("create-db")
-@click.argument("admin_pass")
-@with_appcontext
-def create_db_command(admin_pass):
-    from flask import current_app
-    db.init_app(current_app)
-
+def create_db(admin_pass, db):
     db_path = db.engine.url
     print(f"creating new database with path: {db_path}")
     db.create_all()
@@ -102,6 +95,18 @@ def create_db_command(admin_pass):
     db.session.add(admin_user)
     db.session.add(guest_user)
     db.session.commit()
+    
+
+
+@click.command("create-db")
+@click.argument("admin_pass")
+@with_appcontext
+def create_db_command(admin_pass):
+    from flask import current_app
+    db.init_app(current_app)
+    create_db(admin_pass, db)
+    
+    
 
 
 @click.command("change-pw")
