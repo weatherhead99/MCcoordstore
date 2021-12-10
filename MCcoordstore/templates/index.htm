@@ -8,8 +8,20 @@
     {{map_html_2d}}
     {% endif %}
 
-<h2> List of POIs </h2>
+{% if current_user.is_authenticated %}
+  <h2>Add new POI</h2>
+  <form method="post" class="poiform">
+  {{ form.csrf_token }}
+  {{ form.name.label }} {{ form.name }}
+  {{ form.x.label }} {{ form.x(class_="coordnum") }}
+  {{ form.y.label }} {{ form.y(class_="coordnum") }}
+  {{ form.z.label }} {{ form.z(class_="coordnum") }}
+  {{ form.public.label }} {{ form.public }}
+  <input type="submit">
+  </form>
+{% endif %}
 
+<h2> List of POIs </h2>
 <table class="poi_list">
   <tr>
     <th>Name</th>
@@ -19,7 +31,7 @@
     <th>created by</th>
     <th>created at</th>
   </tr>
-
+  
   {% for poi in poi_table_data %}
   <tr>
     <td>{{ poi.name }} </td>

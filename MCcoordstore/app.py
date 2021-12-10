@@ -21,17 +21,31 @@ from .db import get_db, User, PointOfInterest
 app = create_app()
 db = get_db(app)
 
-@app.route("/")
+@app.route("/", methods=["POST", "GET"])
 def index():
     locplot = LocationsPlot()
 
-    pois = PointOfInterest.query.filter_by(public=True).all()
+
+    if current_user.is_authenticated:
+        pois = PointOfInterest.query.all()
+    else:
+        pois = PointOfInterest.query.filter_by(public=True).all()
+
     locplot.xdat = [_.coords[0] for _ in pois]
     locplot.zdat = [_.coords[2] for _ in pois]
     locplot.update_plot()
 
+    form = AddPOIForm()
+    if form.validate_on_submit():
+        #TODO: user guest only for now
+        poi = PointOfInterest(name=form.data["name"], public=form.data["public"], user=current_user)
+        poi.coords = form.coords
+        db.session.add(poi)
+        db.session.commit()
+        return redirect("/")
+
     return render_template("index.htm", map_html_2d = Markup(locplot.rendered_html),
-                           poi_table_data = pois)
+                           poi_table_data = pois, form=form)
 
 
 @app.route("/add_manual", methods=["POST","GET"])
@@ -40,11 +54,10 @@ def add_manual():
     form = AddPOIForm()
     if form.validate_on_submit():
         #TODO: user guest only for now
-        poi = PointOfInterest(name=form.data["name"], public=True, user=current_user)
+        poi = PointOfInterest(name=form.data["name"], public=form.data["public"], user=current_user)
         poi.coords = form.coords
         db.session.add(poi)
         db.session.commit()
-
         return redirect("/")
 
     return render_template("add_manual.htm", form=form)

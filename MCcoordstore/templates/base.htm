@@ -11,8 +11,8 @@
       <ul>
 	<li><a href="/">home</a></li>
 	<li><a href="/add_manual">add POI manually</a></li>
-	<li><a href="/signup">signup</a></li>
 	{% if not current_user.is_authenticated %}
+	<li><a href="/signup">signup</a></li>
 	<li><a href="/login">login</a></li>
 	{% else %}
 	<li><a href="/logout">logout</a></li>

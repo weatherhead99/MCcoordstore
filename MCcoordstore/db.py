@@ -22,6 +22,7 @@ class User(UserMixin, db.Model):
     username = db.Column(db.String(80), unique=True, nullable=False)
     displayname = db.Column(db.String(80), unique=True, nullable=False)
     hashed_pw = db.Column(db.String, nullable=False)
+    is_admin = db.Column(db.Boolean, default=False)
     
     @classmethod
     def create_new_user(cls, username: str, displayname: str, password: str) -> "User":
@@ -86,8 +87,26 @@ def create_db_command(admin_pass):
 
     print("creating default admin and guest users")
     admin_user = User.create_new_user("admin", "admin", admin_pass)
+    admin_user.is_admin = True
     guest_user = User.create_new_user("guest", "guest", "guest")
-    
+
     db.session.add(admin_user)
     db.session.add(guest_user)
     db.session.commit()
+
+
+@click.command("change-pw")
+@click.argument("username")
+@click.argument("new_pass")
+@with_appcontext
+def change_pw_command(username, new_pass):
+    from flask import current_app
+    db.init_app(current_app)
+
+    usr = User.query.filter_by(username=username).first()
+    pwhash = generate_password_hash(new_pass)
+    usr.hashed_pw = pwhash
+    db.session.commit()
+
+    
+

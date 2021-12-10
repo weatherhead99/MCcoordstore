@@ -1,7 +1,7 @@
 from flask import Flask
 import os
 from typing import Dict, Any
-from .db import create_db_command, User
+from .db import create_db_command, User, change_pw_command
 from flask_login import LoginManager
 
 
@@ -30,6 +30,7 @@ def create_app(test_config: Dict[str, Any]=None):
         pass
     
     app.cli.add_command(create_db_command)
+    app.cli.add_command(change_pw_command)
     
     
     lman = LoginManager()
