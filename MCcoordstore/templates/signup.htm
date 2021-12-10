@@ -1,0 +1,16 @@
+{% extends "base.htm" %}
+
+{% block content %}
+<h1> Signup </h1>
+
+<form method="post" action="/signup">
+  {{ form.csrf_token }}
+  <p>  {{ form.username.label }} {{ form.username }} </p>
+  <p>  {{ form.displayname.label }} {{ form.displayname }} </p>
+  <p>  {{ form.password.label }} {{ form.password }} </p>
+  <p> {{ form.confirm.label }} {{ form.confirm }} </p>
+  <input type="submit">
+</form>
+
+
+{% endblock %}

@@ -8,8 +8,10 @@ setup(name="MCcoordstore",
       packages = find_packages(),
       install_requires = ["flask",
                           "flask_sqlalchemy",
+                          "Flask-WTF",
+                          "Flask-login",
                           "matplotlib",
                           "numpy",
-                          "mpld3"]
-      
+                          "mpld3",
+                          "werkzeug"]      
       )

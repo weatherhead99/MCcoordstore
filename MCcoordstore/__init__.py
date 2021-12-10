@@ -26,7 +26,7 @@ def create_app(test_config: Dict[str, Any]=None):
     
     app.cli.add_command(create_db_command)
     
-    
+
     return app
 
 

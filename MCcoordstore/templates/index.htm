@@ -2,9 +2,36 @@
 
 {% block content %}
 <h1>Minecraft Points of Interest </h1>
+
+<h2> 2D Map </h2>
     {% if map_html_2d %}
     {{map_html_2d}}
     {% endif %}
+
+<h2> List of POIs </h2>
+
+<table>
+  <tr>
+    <th>Name</th>
+    <th>X</th>
+    <th>Y</th>
+    <th>Z</th>
+    <th>created by</th>
+    <th>created at</th>
+  </tr>
+
+  {% for poi in poi_table_data %}
+  <tr>
+    <td>{{ poi.name }} </td>
+    <td>{{ poi.coord_x }} </td>
+    <td>{{ poi.coord_y }} </td>
+    <td>{{ poi.coord_z }} </td>
+    <td>{{ poi.user.displayname }} </td>
+    <td>{{ poi.create_date }} </td>
+  </tr>
+  {% endfor %}
+</table>
+
 
 {% endblock %}
 

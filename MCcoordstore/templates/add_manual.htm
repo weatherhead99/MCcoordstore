@@ -4,19 +4,13 @@
 <h1> Add POI manually </h1>
 
 <form method="post">
-  <label for="name">Name</label>
-  <input for="name" required>
-
-  <label for="x">x: </label>
-  <input for="x" type="number" required>
-
-  <label for="y">y: </label>
-  <input for="y" type="number" required>
-
-  <label for="z">z: </label>
-  <input for="z" type="number" required>
-
-  <input type="Submit">
+  {{ form.csrf_token }}
+  {{ form.name.label }} {{ form.name }}
+  {{ form.x.label }} {{ form.x }}
+  {{ form.y.label }} {{ form.y }}
+  {{ form.z.label }} {{ form.z }}
+  {{ form.public.label }} {{ form.public }}
+  <input type="submit">
 </form>
 
 
