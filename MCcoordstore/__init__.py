@@ -3,8 +3,8 @@ import os
 from typing import Dict, Any
 from .db import create_db_command, User, change_pw_command
 from flask_login import LoginManager
-
-
+from flask_migrate import Migrate
+from flask_sqlalchemy import SQLAlchemy
 
 def create_app(test_config: Dict[str, Any]=None):
     app = Flask(__name__, instance_relative_config=True)
@@ -40,6 +40,12 @@ def create_app(test_config: Dict[str, Any]=None):
     @lman.user_loader
     def load_user(user_id: str):
         return User.query.get(int(user_id))
+    
+    
+    db = SQLAlchemy(app)
+    migrate = Migrate(app,db)
+    
+    
     
     
 

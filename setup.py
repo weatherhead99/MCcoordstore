@@ -13,5 +13,6 @@ setup(name="MCcoordstore",
                           "matplotlib",
                           "numpy",
                           "mpld3",
-                          "werkzeug"]      
+                          "werkzeug",
+                          "flask-migrate"]      
       )
