@@ -1,7 +1,8 @@
 from flask import Flask
 import os
 from typing import Dict, Any
-from .db import create_db_command
+from .db import create_db_command, User
+from flask_login import LoginManager
 
 
 
@@ -29,6 +30,16 @@ def create_app(test_config: Dict[str, Any]=None):
         pass
     
     app.cli.add_command(create_db_command)
+    
+    
+    lman = LoginManager()
+    lman.login_view = "login"
+    lman.init_app(app)
+    
+    @lman.user_loader
+    def load_user(user_id: str):
+        return User.query.get(int(user_id))
+    
     
 
     return app

@@ -32,3 +32,9 @@ class SignupForm(FlaskForm):
                                           EqualTo("confirm", message="passwords must match")])
     confirm  = PasswordField("confirm password", [DataRequired()])
 
+class LoginForm(FlaskForm):
+    username = _reqfield(StringField, "username")
+    password = _reqfield(PasswordField, "password")
+    remember = BooleanField("remember me")
+
+    

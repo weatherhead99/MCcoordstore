@@ -12,11 +12,11 @@ from datetime import datetime
 import click
 from typing import Sequence
 from werkzeug.security import generate_password_hash
-
+from flask_login import UserMixin
 
 db = SQLAlchemy()
 
-class User(db.Model):
+class User(UserMixin, db.Model):
     __tablename__ = "user"
     userid = db.Column(db.Integer, primary_key = True)
     username = db.Column(db.String(80), unique=True, nullable=False)
@@ -27,6 +27,9 @@ class User(db.Model):
     def create_new_user(cls, username: str, displayname: str, password: str) -> "User":
         pwhash = generate_password_hash(password)
         return User(username = username, displayname=displayname, hashed_pw=pwhash)
+    
+    def get_id(self):
+        return str(self.userid)
 
 
 
