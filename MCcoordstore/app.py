@@ -6,7 +6,7 @@ Created on Thu Dec  9 18:23:28 2021
 @author: danw
 """
 
-from flask import render_template, redirect, flash
+from flask import render_template, redirect, flash, current_app, g
 from markupsafe import Markup
 from sqlalchemy import select
 from werkzeug.security import check_password_hash
@@ -16,7 +16,7 @@ from MCcoordstore import create_app
 from .plots import LocationsPlot
 from .forms import AddPOIForm, SignupForm, LoginForm
 from .db import get_db, User, PointOfInterest
-
+from .utils import serialize_pois
 
 app = create_app()
 db = get_db(app)
@@ -105,3 +105,12 @@ def login():
 def logout():
     logout_user()
     return redirect("/")
+
+@app.route("/dump_pois")
+@login_required
+def dump_pois():
+    return serialize_pois(app, db)
+
+    
+    
+    

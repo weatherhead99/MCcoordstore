@@ -1,7 +1,7 @@
-from flask import Flask
+from flask import Flask, g
 import os
 from typing import Dict, Any
-from .db import create_db_command, User, change_pw_command
+from .db import create_db_command, User, change_pw_command, get_db
 from flask_login import LoginManager
 from flask_migrate import Migrate
 from flask_sqlalchemy import SQLAlchemy
@@ -42,9 +42,8 @@ def create_app(test_config: Dict[str, Any]=None):
         return User.query.get(int(user_id))
     
     
-    db = SQLAlchemy(app)
+    db = get_db(app)
     migrate = Migrate(app,db)
-    
     
     
     

@@ -66,6 +66,15 @@ class PointOfInterest(db.Model):
         self.coord_x = val[0]
         self.coord_y = val[1]
         self.coord_z = val[2]
+        
+    def serialize_to_dict(self):
+        return {"id" : self.poiid,
+                "name" : self.name,
+                "created" : str(self.create_date),
+                "public" : self.public,
+                "username" : self.user.username,
+                "coord" : self.coords
+                }
 
 
 def get_db(app):
