@@ -20,7 +20,7 @@ class User(db.Model):
     __tablename__ = "user"
     userid = db.Column(db.Integer, primary_key = True)
     username = db.Column(db.String(80), unique=True, nullable=False)
-    displayname = db.Column(db.String(80), nullable=False)
+    displayname = db.Column(db.String(80), unique=True, nullable=False)
     hashed_pw = db.Column(db.String, nullable=False)
     
     @classmethod

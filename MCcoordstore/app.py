@@ -6,7 +6,7 @@ Created on Thu Dec  9 18:23:28 2021
 @author: danw
 """
 
-from flask import Flask, render_template, request, redirect
+from flask import Flask, render_template, request, redirect, flash
 import numpy as np
 from .plots import LocationsPlot
 from markupsafe import Markup
@@ -52,6 +52,24 @@ def add_manual():
 @app.route("/signup", methods=["POST","GET"])
 def signup():
     form = SignupForm()
-
+    if form.validate_on_submit():
+        #check user is unique
+        existing_usrname = User.query.filter_by(username=form.data["username"]).first()
+        if existing_usrname:
+            flash("either username or displayname is already in use!", "flash-error")
+            return redirect("/signup")
+        
+        existing_displayname = User.query.filter_by(displayname=form.data["displayname"]).first()
+        if existing_displayname:
+            flash("displayname is already in use!", "flash-error")
+            return redirect("/signup")
+        
+        new_usr = User.create_new_user(form.data["username"], form.data["displayname"],
+                                       form.data["password"])
+        db.session.add(new_usr)
+        db.session.commit()
+        
+        flash("signup successful, you can now login", "flash-success")
+        return redirect("/")
     return render_template("signup.htm", form=form)
 

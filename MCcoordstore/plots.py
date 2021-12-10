@@ -6,10 +6,14 @@ Created on Thu Dec  9 19:05:14 2021
 @author: danw
 """
 
+import matplotlib
 import matplotlib.pyplot as plt
 import mpld3
 from typing import List, Union
 import numpy as np
+
+matplotlib.use("template")
+
 
 class LocationsPlot:
     def __init__(self, **plotkwargs):
