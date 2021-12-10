@@ -16,3 +16,8 @@
     padding: 8px;
     background-color: #dddddd;
 }
+
+.poi_list th, .poi_list td, table.poi_list {
+    border: 1px solid black;
+
+}
