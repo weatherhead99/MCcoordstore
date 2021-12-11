@@ -1,4 +1,7 @@
-{#      MCcoordstore - simple web based store for Minecraft points of interest
+#!/usr/bin/env python3
+# -*- coding: utf-8 -*-
+
+#      MCcoordstore - simple web based store for Minecraft points of interest
 #      Copyright (C) 2021  Daniel Philip Weatherill
 
 #      This program is free software: you can redistribute it and/or modify it
@@ -13,23 +16,17 @@
 
 #      You should have received a copy of the GNU Affero General Public License
 # along with this program.  If not, see <http://www.gnu.org/licenses/>.
-#}
 
 
-{% extends "base.htm" %}
+"""
+Created on Fri Dec 10 22:19:38 2021
 
-{% block content %}
-
-<h2> Signup </h2>
-
-<form method="post" action="/signup">
-  {{ form.csrf_token }}
-  <p>  {{ form.username.label }} {{ form.username }} </p>
-  <p>  {{ form.displayname.label }} {{ form.displayname }} </p>
-  <p>  {{ form.password.label }} {{ form.password }} </p>
-  <p> {{ form.confirm.label }} {{ form.confirm }} </p>
-  <input type="submit">
-</form>
+@author: danw
+"""
 
 
-{% endblock %}
+
+class DefaultConfig:
+    SECRET_KEY="super_secret_key"
+    SQLALCHEMY_DATABASE_URI="sqlite:///mccoordstore.sqlite"
+    SQLALCHEMY_TRACK_MODIFICATIONS=False

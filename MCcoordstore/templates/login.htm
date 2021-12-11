@@ -20,16 +20,14 @@
 
 {% block content %}
 
-<h2> Signup </h2>
+<h2>Login</h2>
 
-<form method="post" action="/signup">
+<form method="post" action="/login">
   {{ form.csrf_token }}
-  <p>  {{ form.username.label }} {{ form.username }} </p>
-  <p>  {{ form.displayname.label }} {{ form.displayname }} </p>
-  <p>  {{ form.password.label }} {{ form.password }} </p>
-  <p> {{ form.confirm.label }} {{ form.confirm }} </p>
+  <p> {{ form.username.label }} {{ form.username }} </p>
+  <p> {{ form.password.label }} {{ form.password }} </p>
+  <p> {{ form.remember.label }} {{ form.remember }} </p>
   <input type="submit">
 </form>
-
 
 {% endblock %}
