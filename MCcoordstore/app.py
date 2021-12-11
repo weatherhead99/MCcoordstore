@@ -30,6 +30,7 @@ def index():
         pois = PointOfInterest.query.all()
     else:
         pois = PointOfInterest.query.filter_by(public=True).all()
+    
 
     locplot.xdat = [_.coords[0] for _ in pois]
     locplot.zdat = [_.coords[2] for _ in pois]

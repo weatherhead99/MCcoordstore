@@ -1,6 +1,18 @@
 {% extends "base.htm" %}
 
 {% block content %}
+
+<script>
+  function convertUTCDateToLocalDate(date) {
+  var newDate = new Date(date.getTime() + date.getTimeZoneOffset()*60*1000);
+  var offset = date.getTimezoneOffset() / 60;
+  var hours = date.getHours();
+  newDate.setHours(hours - offset);
+  return newDate;
+  }
+</script>
+
+
 <h1>Minecraft Points of Interest </h1>
 
 <h2> 2D Map </h2>
@@ -39,9 +51,9 @@
     <td>{{ poi.coord_y }} </td>
     <td>{{ poi.coord_z }} </td>
     <td>{{ poi.user.displayname }} </td>
-    <td>{{ poi.create_date }} </td>
+    <td id="date{{poi.poiid}}">{{ poi.create_date.isoformat() }} </td>
     {% if poi.user == current_user %}
-    <td> <a href="/poi/delete/{{poi.poiid}}"> delete </a></td>
+    <td> <a href="/poi/delete/{{poi.poiid}}" method=> delete </a></td>
     {% endif %}
   </tr>
   {% endfor %}

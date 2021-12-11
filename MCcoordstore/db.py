@@ -8,7 +8,7 @@ Created on Thu Dec  9 17:55:36 2021
 
 from flask.cli import with_appcontext
 from flask_sqlalchemy import SQLAlchemy
-from datetime import datetime
+from datetime import datetime, timezone
 import click
 from typing import Sequence
 from werkzeug.security import generate_password_hash
@@ -44,7 +44,7 @@ class PointOfInterest(db.Model):
     __tablename__ = "pointofinterest"
     poiid = db.Column(db.Integer, primary_key=True)
     name = db.Column(db.String(80), nullable=False)
-    create_date = db.Column(db.DateTime, nullable=False, default=datetime.utcnow)
+    create_date = db.Column(db.DateTime(timezone=True), nullable=False, default=lambda : datetime.now(timezone.utc))
     public = db.Column(db.Boolean, default=False)
 
     userid = db.Column(db.Integer, db.ForeignKey("user.userid"), nullable=False)
