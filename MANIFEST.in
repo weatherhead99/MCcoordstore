@@ -1,0 +1,2 @@
+recursive-include MCcoordstore/templates *
+recursive-include MCcoordstore/static *
