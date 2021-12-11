@@ -16,10 +16,16 @@
 
 
 from setuptools import setup, find_packages
+import pathlib
+
+HERE = pathlib.Path(__file__).parent
+README = (HERE / "README").read_text()
 
 setup(name="MCcoordstore",
       version="0.0.1dev",
       description="simple coordinate store for minecraft",
+      long_description=README,
+      long_description_content_type="text/markdown",
       license="AGPL-3.0-or-later",
       author="Dan Weatherill",
       author_email="dan.weatherill@cantab.net",
