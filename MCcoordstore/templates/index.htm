@@ -40,6 +40,9 @@
     <td>{{ poi.coord_z }} </td>
     <td>{{ poi.user.displayname }} </td>
     <td>{{ poi.create_date }} </td>
+    {% if poi.user == current_user %}
+    <td> <a href="/poi/delete/{{poi.poiid}}"> delete </a></td>
+    {% endif %}
   </tr>
   {% endfor %}
 </table>

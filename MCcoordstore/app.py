@@ -100,6 +100,35 @@ def login():
         return redirect("/")
     return render_template("login.htm", form=form)
 
+
+#TODO: implement REST DELETE METHOD
+@app.route("/poi/delete/<idx>", methods=["GET"])
+@login_required
+def delete_poi(idx):
+    try:
+        intid = int(idx)
+    except ValueError as err:
+        flash("unable to interpret idx as int", "flash-error")
+        return redirect("/")
+    
+    poi = PointOfInterest.query.filter_by(poiid=intid).first()
+    
+    if not poi:
+        flash("invalid POI idx", "flash-error")
+        return redirect("/")
+    
+    if poi.user != current_user and not current_user.is_admin:
+        flash("no permission to delete POI!", "flash-error")
+        return redirect("/")
+
+    db.session.delete(poi)
+    db.session.commit()
+
+    flash("POI deleted", "flash-success")
+    return redirect("/")
+
+
+
 @app.route("/logout")
 @login_required
 def logout():

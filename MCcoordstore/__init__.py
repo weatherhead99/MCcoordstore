@@ -44,6 +44,4 @@ def create_app(test_config: Dict[str, Any]=None):
     
     return app
 
-
-    
     
