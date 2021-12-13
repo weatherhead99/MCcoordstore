@@ -46,5 +46,6 @@ setup(name="MCcoordstore",
                           "numpy",
                           "mpld3",
                           "werkzeug",
-                          "flask-migrate"]
+                          "flask-migrate",
+                          "itsdangerous"]
       )

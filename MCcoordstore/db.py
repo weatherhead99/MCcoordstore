@@ -25,6 +25,7 @@ Created on Thu Dec  9 17:55:36 2021
 @author: danw
 """
 
+
 from flask.cli import with_appcontext
 from flask_sqlalchemy import SQLAlchemy
 from datetime import datetime, timezone
@@ -32,6 +33,7 @@ import click
 from typing import Sequence
 from werkzeug.security import generate_password_hash
 from flask_login import UserMixin
+from itsdangerous import TimedJSONWebSignatureSerializer, BadSignature, SignatureExpired
 
 db = SQLAlchemy()
 
@@ -51,6 +53,18 @@ class User(UserMixin, db.Model):
     def get_id(self):
         return str(self.userid)
 
+    def generate_api_token(self, app, expiration_seconds: int = 86400):
+        secret_key = app.config["SECRET_KEY"]
+        ser = TimedJSONWebSignatureSerializer(secret_key, expiration_seconds)
+        return ser.dumps({"userid" : self.userid})
+    
+    @classmethod
+    def verify_api_token(cls, app, token):
+        secret_key = app.config["SECRET_KEY"]
+        ser = TimedJSONWebSignatureSerializer(secret_key)
+        data = ser.loads(token)
+        user = cls.query.get(data['userid'])
+        return user        
 
 
 class RenderStyle(db.Model):
