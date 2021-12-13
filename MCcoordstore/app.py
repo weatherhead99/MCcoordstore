@@ -18,9 +18,8 @@
 # along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
 
-from flask import render_template, redirect, flash, current_app, g
+from flask import render_template, redirect, flash
 from markupsafe import Markup
-from sqlalchemy import select
 from werkzeug.security import check_password_hash
 from flask_login import login_required, current_user, login_user, logout_user
 import pytz
@@ -28,11 +27,13 @@ import pytz
 from MCcoordstore import create_app
 from .plots import LocationsPlot
 from .forms import AddPOIForm, SignupForm, LoginForm
-from .db import get_db, User, PointOfInterest
+from .db import get_db, User, PointOfInterest, POI_NAME_LOOKUP
 from .utils import serialize_pois
 
 app = create_app()
 db = get_db(app)
+
+
 
 @app.route("/", methods=["POST", "GET"])
 def index():
@@ -56,14 +57,19 @@ def index():
     form = AddPOIForm()
     if form.validate_on_submit():
         #TODO: user guest only for now
-        poi = PointOfInterest(name=form.data["name"], public=form.data["public"], user=current_user)
+        print("coordtp: %s" % form.data["coordtp"])
+        print("coordtp tp : %s" % str(type(form.data["coordtp"])))
+        
+        poi = PointOfInterest(name=form.data["name"], public=form.data["public"], user=current_user,
+                              coordtype=form.data["coordtp"])
         poi.coords = form.coords
+        
         db.session.add(poi)
         db.session.commit()
         return redirect("/")
 
     return render_template("index.htm", map_html_2d = Markup(locplot.rendered_html),
-                           poi_table_data = pois, form=form)
+                           poi_table_data = pois, form=form, poi_name_lookup=POI_NAME_LOOKUP)
 
 
 @app.route("/add_manual", methods=["POST","GET"])
@@ -72,7 +78,11 @@ def add_manual():
     form = AddPOIForm()
     if form.validate_on_submit():
         #TODO: user guest only for now
-        poi = PointOfInterest(name=form.data["name"], public=form.data["public"], user=current_user)
+        poi = PointOfInterest(name=form.data["name"], public=form.data["public"], user=current_user,
+                              coordtype=form.data["coordtp"])
+        
+        print("coordtp: %s" % form.data["coordtp"])
+        print("coordtp tp : %s" % str(type(form.data["coordtp"])))
         poi.coords = form.coords
         db.session.add(poi)
         db.session.commit()

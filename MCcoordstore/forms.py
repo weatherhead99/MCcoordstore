@@ -25,8 +25,10 @@ Created on Thu Dec  9 22:33:46 2021
 """
 
 from flask_wtf import FlaskForm
-from wtforms import StringField, IntegerField, PasswordField, BooleanField
+from wtforms import StringField, IntegerField, PasswordField, BooleanField, SelectField
 from wtforms.validators import DataRequired, EqualTo
+
+from .db import CoordType, POI_NAME_LOOKUP
 
 def _reqfield(func, *args, **kwargs):
     return func(*args, **kwargs, validators=[DataRequired()])
@@ -36,6 +38,10 @@ class AddPOIForm(FlaskForm):
     x = _reqfield(IntegerField, "x")
     y = _reqfield(IntegerField, "y")
     z = _reqfield(IntegerField, "z")
+    
+    typechoice = [(str(i.value), POI_NAME_LOOKUP[i]) for i in CoordType]
+    
+    coordtp = _reqfield(SelectField, "type", choices=typechoice)
     public = BooleanField("public")
     
     @property

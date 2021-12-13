@@ -7,7 +7,8 @@
 
 <h1>Minecraft Points of Interest </h1>
 
-<h2> 2D Map </h2>
+    <h2> 2D Map </h2>
+    <p> Only shows the Overworld at the moment! </p>
     {% if map_html_2d %}
     {{map_html_2d}}
     {% endif %}
@@ -19,7 +20,8 @@
   {{ form.name.label }} {{ form.name }}
   {{ form.x.label }} {{ form.x(class_="coordnum") }}
   {{ form.y.label }} {{ form.y(class_="coordnum") }}
-  {{ form.z.label }} {{ form.z(class_="coordnum") }}
+{{ form.z.label }} {{ form.z(class_="coordnum") }}
+{{form.coordtp.label}} {{form.coordtp}}
   {{ form.public.label }} {{ form.public }}
   <input type="submit">
   </form>
@@ -34,6 +36,7 @@
     <th onclick="sortTable('list_of_pois', 'tr_poix')">X</th>
     <th onclick="sortTable('list_of_pois', 'tr_poiy')">Y</th>
     <th onclick="sortTable('list_of_pois', 'tr_poiz')">Z</th>
+    <th onclick="sortTable('list_of_pois', 'tr_poitype')">type </th>
     <th onclick="sortTable('list_of_pois', 'tr_poiuser')">created by</th>
     <th onclick="sortTable('list_of_pois', 'table-date-localize')">created at</th>
   </tr>
@@ -62,6 +65,7 @@
     <td id="x{{poi.poiid}}" class="tr_poix" data-isnum="1">{{ poi.coord_x }} </td>
     <td id="y{{poi.poiid}}" class="tr_poiy" data-isnum="1">{{ poi.coord_y }} </td>
     <td id="z{{poi.poiid}}" class="tr_poiz" data-isnum="1">{{ poi.coord_z }} </td>
+    <td id="type{{poi.poiid}}" class="tr_poitype"> {{poi_name_lookup[poi.coordtype]}} </td>
     <td id="displayname{{poi.poiid}}" class="tr_poiuser">{{ poi.user.displayname }}</td>
     <td id="date{{poi.poiid}}" class="table-date-localize">{{ poi.create_date.isoformat() }}</td>
     {% if poi.user == current_user %}

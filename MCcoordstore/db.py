@@ -115,6 +115,12 @@ class CoordType(enum.IntEnum):
     END = 3,
     UNDEFINED = 0
 
+POI_NAME_LOOKUP = {CoordType.OVERWORLD : "Overworld",
+                   CoordType.NETHER : "The Nether",
+                   CoordType.END : "The End",
+                   CoordType.UNDEFINED : "undefined"}
+
+
 
 poi_tag_association = db.Table("poi_tag_association", db.metadata,
                             db.Column("poi_id", db.ForeignKey("pointofinterest.poiid"), primary_key=True),
@@ -136,7 +142,8 @@ class PointOfInterest(db.Model):
     coord_y = db.Column(db.Integer)
     coord_z = db.Column(db.Integer)
     
-    coordtype = db.Column(Enum(CoordType, default=CoordType.UNDEFINED, nullable=False,
+    coordtype = db.Column(Enum(CoordType, default=str(CoordType.UNDEFINED.value), nullable=False,
+                               server_default=str(CoordType.OVERWORLD.value),
                                values_callable = lambda enum: [str(_.value) for _ in enum]))
 
     @property
@@ -157,7 +164,8 @@ class PointOfInterest(db.Model):
                 "created" : str(self.create_date),
                 "public" : self.public,
                 "username" : self.user.username,
-                "coord" : self.coords
+                "coord" : self.coords,
+                "coord_type" : POI_NAME_LOOKUP[self.coordtype]
                 }
 
 class Tag(db.Model):

@@ -37,7 +37,8 @@ def upgrade():
     sa.PrimaryKeyConstraint('poi_id', 'tag_id', name=op.f('pk_poi_tag_association'))
     )
     with op.batch_alter_table('pointofinterest', schema=None) as batch_op:
-        batch_op.add_column(sa.Column('coordtype', sa.Enum('1', '2', '3', '0', name='coordtype'), nullable=True))
+        batch_op.add_column(sa.Column('coordtype', sa.Enum('1', '2', '3', '0', name='coordtype'), nullable=True,
+                                      server_default='1'))
 
     with op.batch_alter_table('user', schema=None) as batch_op:
         batch_op.add_column(sa.Column('alternate_id', sa.Integer(), nullable=True))
