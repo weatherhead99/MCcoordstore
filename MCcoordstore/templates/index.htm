@@ -2,12 +2,7 @@
 
 {% block content %}
 
-<script>
-  function convertUTCdtToLocal(st) {
-  dt = new Date(st.trim());
-  return dt.toLocaleString();
-  };
-</script>
+<script src="static/scripts/table_utils.js"></script>
 
 
 <h1>Minecraft Points of Interest </h1>
@@ -31,14 +26,16 @@
 {% endif %}
 
 <h2> List of POIs </h2>
+<p>Click on a table header to sort by that attribute. Click again to reverse direction of sorting</p>
+
 <table class="poi_list" id="list_of_pois">
   <tr>
-    <th>Name</th>
-    <th>X</th>
-    <th>Y</th>
-    <th>Z</th>
-    <th>created by</th>
-    <th>created at</th>
+    <th onclick="sortTable('list_of_pois', 'tr_poiname')">Name</th>
+    <th onclick="sortTable('list_of_pois', 'tr_poix')">X</th>
+    <th onclick="sortTable('list_of_pois', 'tr_poiy')">Y</th>
+    <th onclick="sortTable('list_of_pois', 'tr_poiz')">Z</th>
+    <th onclick="sortTable('list_of_pois', 'tr_poiuser')">created by</th>
+    <th onclick="sortTable('list_of_pois', 'table-date-localize')">created at</th>
   </tr>
 {#      MCcoordstore - simple web based store for Minecraft points of interest
 #      Copyright (C) 2021  Daniel Philip Weatherill
@@ -60,12 +57,12 @@
 
   
   {% for poi in poi_table_data %}
-  <tr id="poi{{poi.poiid}}">
-    <td id="name{{poi.poiid}}">{{ poi.name }} </td>
-    <td id="x{{poi.poiid}}">{{ poi.coord_x }} </td>
-    <td id="y{{poi.poiid}}">{{ poi.coord_y }} </td>
-    <td id="z{{poi.poiid}}">{{ poi.coord_z }} </td>
-    <td id="displayname{{poi.poiid}}">{{ poi.user.displayname }}</td>
+  <tr id="poi{{poi.poiid}}" class="tr_poiid">
+    <td id="name{{poi.poiid}}" class="tr_poiname">{{ poi.name }} </td>
+    <td id="x{{poi.poiid}}" class="tr_poix" data-isnum="1">{{ poi.coord_x }} </td>
+    <td id="y{{poi.poiid}}" class="tr_poiy" data-isnum="1">{{ poi.coord_y }} </td>
+    <td id="z{{poi.poiid}}" class="tr_poiz" data-isnum="1">{{ poi.coord_z }} </td>
+    <td id="displayname{{poi.poiid}}" class="tr_poiuser">{{ poi.user.displayname }}</td>
     <td id="date{{poi.poiid}}" class="table-date-localize">{{ poi.create_date.isoformat() }}</td>
     {% if poi.user == current_user %}
     <td> <a href="/poi/delete/{{poi.poiid}}"> delete </a></td>
@@ -76,11 +73,12 @@
 
 <script>
     var daterows = document.getElementsByClassName("table-date-localize");
-  for(let date of daterows)
-  {
-  var rawdate = date.innerHTML;
-  date.innerHTML = convertUTCdtToLocal(rawdate);
-    }
+for(let date of daterows)
+{
+    var rawdate = date.innerHTML;
+    date.innerHTML = convertUTCdtToLocal(rawdate);
+}
+
 </script>
 
 
