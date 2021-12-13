@@ -18,13 +18,6 @@
 # along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
 
-
-"""
-Created on Thu Dec  9 18:23:28 2021
-
-@author: danw
-"""
-
 from flask import render_template, redirect, flash, current_app, g
 from markupsafe import Markup
 from sqlalchemy import select
@@ -45,8 +38,8 @@ db = get_db(app)
 def index():
     locplot = LocationsPlot()
 
-
-    if current_user.is_authenticated:
+    
+    if current_user and current_user.is_authenticated:
         pois = PointOfInterest.query.order_by(PointOfInterest.name).all()
     else:
         pois = PointOfInterest.query.filter_by(public=True).order_by(PointOfInterest.name).all()
