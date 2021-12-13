@@ -3,13 +3,10 @@
 {% block content %}
 
 <script>
-  function convertUTCDateToLocalDate(date) {
-  var newDate = new Date(date.getTime() + date.getTimeZoneOffset()*60*1000);
-  var offset = date.getTimezoneOffset() / 60;
-  var hours = date.getHours();
-  newDate.setHours(hours - offset);
-  return newDate;
-  }
+  function convertUTCdtToLocal(st) {
+  dt = new Date(st.trim());
+  return dt.toLocaleString();
+  };
 </script>
 
 
@@ -34,7 +31,7 @@
 {% endif %}
 
 <h2> List of POIs </h2>
-<table class="poi_list">
+<table class="poi_list" id="list_of_pois">
   <tr>
     <th>Name</th>
     <th>X</th>
@@ -63,19 +60,28 @@
 
   
   {% for poi in poi_table_data %}
-  <tr>
-    <td>{{ poi.name }} </td>
-    <td>{{ poi.coord_x }} </td>
-    <td>{{ poi.coord_y }} </td>
-    <td>{{ poi.coord_z }} </td>
-    <td>{{ poi.user.displayname }} </td>
-    <td id="date{{poi.poiid}}">{{ poi.create_date.isoformat() }} </td>
+  <tr id="poi{{poi.poiid}}">
+    <td id="name{{poi.poiid}}">{{ poi.name }} </td>
+    <td id="x{{poi.poiid}}">{{ poi.coord_x }} </td>
+    <td id="y{{poi.poiid}}">{{ poi.coord_y }} </td>
+    <td id="z{{poi.poiid}}">{{ poi.coord_z }} </td>
+    <td id="displayname{{poi.poiid}}">{{ poi.user.displayname }}</td>
+    <td id="date{{poi.poiid}}" class="table-date-localize">{{ poi.create_date.isoformat() }}</td>
     {% if poi.user == current_user %}
-    <td> <a href="/poi/delete/{{poi.poiid}}" method=> delete </a></td>
+    <td> <a href="/poi/delete/{{poi.poiid}}"> delete </a></td>
     {% endif %}
   </tr>
   {% endfor %}
 </table>
+
+<script>
+    var daterows = document.getElementsByClassName("table-date-localize");
+  for(let date of daterows)
+  {
+  var rawdate = date.innerHTML;
+  date.innerHTML = convertUTCdtToLocal(rawdate);
+    }
+</script>
 
 
 {% endblock %}

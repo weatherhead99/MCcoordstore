@@ -30,6 +30,7 @@ from markupsafe import Markup
 from sqlalchemy import select
 from werkzeug.security import check_password_hash
 from flask_login import login_required, current_user, login_user, logout_user
+import pytz
 
 from MCcoordstore import create_app
 from .plots import LocationsPlot
@@ -46,10 +47,14 @@ def index():
 
 
     if current_user.is_authenticated:
-        pois = PointOfInterest.query.all()
+        pois = PointOfInterest.query.order_by(PointOfInterest.name).all()
     else:
-        pois = PointOfInterest.query.filter_by(public=True).all()
+        pois = PointOfInterest.query.filter_by(public=True).order_by(PointOfInterest.name).all()
     
+    
+    for poi in pois:
+        if poi.create_date.tzinfo is None:
+            poi.create_date = pytz.utc.localize(poi.create_date)
 
     locplot.xdat = [_.coords[0] for _ in pois]
     locplot.zdat = [_.coords[2] for _ in pois]
