@@ -26,6 +26,7 @@ from flask_sqlalchemy import SQLAlchemy
 import base64
 from .api_poi import poi_api
 from .login import lman
+from .db import User, RenderStyle, CoordType, PointOfInterest, Tag
 
 CONFIG_ENVVAR = "MCCOORDSTORE_CONFIG"
 
@@ -57,7 +58,7 @@ def create_app(test_config: Dict[str, Any]=None):
     
     db = get_db(app)
     lman.init_app(app)
-    migrate = Migrate(app,db)
+    migrate = Migrate(app,db, render_as_batch=True)
     
     
     return app

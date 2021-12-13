@@ -22,27 +22,58 @@
 from flask.cli import with_appcontext
 from flask_sqlalchemy import SQLAlchemy
 from datetime import datetime, timezone
+from sqlalchemy import Enum, MetaData
 import click
 from typing import Sequence
 from werkzeug.security import generate_password_hash
 from flask_login import UserMixin
 from itsdangerous import TimedJSONWebSignatureSerializer
+import enum
+from random import randint
 
-db = SQLAlchemy()
+
+convention = {
+    "ix": 'ix_%(column_0_label)s',
+    "uq": "uq_%(table_name)s_%(column_0_name)s",
+    "ck": "ck_%(table_name)s_%(constraint_name)s",
+    "fk": "fk_%(table_name)s_%(column_0_name)s_%(referred_table_name)s",
+    "pk": "pk_%(table_name)s"
+}
+
+
+
+metadata = MetaData(naming_convention=convention)
+db = SQLAlchemy(metadata=metadata)
+
+USER_MIN_ALTERNATE_ID = 1000
+USER_MAX_ALTERNATE_ID = 1000000
+
+
+def _server_random_sqlite_range():
+    return "abs(random() % ( {max} - {min} )) + {min}".format(min=USER_MIN_ALTERNATE_ID, max=USER_MAX_ALTERNATE_ID)
+
 
 class User(UserMixin, db.Model):
     __tablename__ = "user"
+    MIN_ALTERNATE_ID=USER_MIN_ALTERNATE_ID
+    MAX_ALTERNATE_ID=USER_MAX_ALTERNATE_ID
+    
     userid = db.Column(db.Integer, primary_key = True)
     username = db.Column(db.String(80), unique=True, nullable=False)
     displayname = db.Column(db.String(80), unique=True, nullable=False)
     hashed_pw = db.Column(db.String, nullable=False)
     is_admin = db.Column(db.Boolean, default=False)
     
+    alternate_id = db.Column(db.Integer, unique=True, nullable=False, server_default=_server_random_sqlite_range())
+    
+    
     @classmethod
     def create_new_user(cls, username: str, displayname: str, password: str) -> "User":
         pwhash = generate_password_hash(password)
-        return User(username = username, displayname=displayname, hashed_pw=pwhash)
-    
+        altid = cls.random_unique_alternateid()
+        return User(username = username, displayname=displayname, 
+                    hashed_pw=pwhash, alternate_id=altid)
+
     def get_id(self):
         return str(self.userid)
 
@@ -59,12 +90,36 @@ class User(UserMixin, db.Model):
         user = cls.query.get(data['userid'])
         return user        
 
+    @classmethod
+    def random_unique_alternateid(cls):
+        randchoice = randint(cls.MIN_ALTERNATE_ID, cls.MAX_ALTERNATE_ID)
+        rcquery = lambda s :  cls.query.filter_by(alternate_id=s).limit(1).first()
+        while rcquery(randchoice) is not None:
+            randchoice = randint(cls.MIN_ALTERNATE_ID, cls.MAX_ALTERNATE_ID)
+        return randchoice
+
+
+
+
 
 class RenderStyle(db.Model):
     __tablename__ = "renderstyle"
     styleid = db.Column(db.Integer, primary_key = True)
     name = db.Column(db.String(80), nullable=True)
     style = db.Column(db.PickleType)
+
+
+class CoordType(enum.IntEnum):
+    OVERWORLD = 1,
+    NETHER = 2,
+    END = 3,
+    UNDEFINED = 0
+
+
+poi_tag_association = db.Table("poi_tag_association", db.metadata,
+                            db.Column("poi_id", db.ForeignKey("pointofinterest.poiid"), primary_key=True),
+                            db.Column("tag_id", db.ForeignKey("tag.tagid"), primary_key=True))
+
 
 class PointOfInterest(db.Model):
     __tablename__ = "pointofinterest"
@@ -81,6 +136,9 @@ class PointOfInterest(db.Model):
     coord_y = db.Column(db.Integer)
     coord_z = db.Column(db.Integer)
     
+    coordtype = db.Column(Enum(CoordType, default=CoordType.UNDEFINED, nullable=False,
+                               values_callable = lambda enum: [str(_.value) for _ in enum]))
+
     @property
     def coords(self):
         return (self.coord_x, self.coord_y, self.coord_z)
@@ -101,6 +159,18 @@ class PointOfInterest(db.Model):
                 "username" : self.user.username,
                 "coord" : self.coords
                 }
+
+class Tag(db.Model):
+    __tablename__ = "tag"
+    tagid = db.Column(db.Integer, primary_key=True)
+    name = db.Column(db.String, nullable=False)
+    create_date = db.Column(db.DateTime(timezone=True), nullable=False, default= lambda: datetime.now(timezone.utc))
+    
+    userid = db.Column(db.Integer, db.ForeignKey("user.userid"), nullable=False)
+    owning_user = db.relationship("User", backref=db.backref("tags"))
+    style = db.Column(db.Integer, db.ForeignKey("renderstyle.styleid"))
+    
+    pois = db.relationship("PointOfInterest", secondary=poi_tag_association, backref="tags")
 
 
 def get_db(app):
