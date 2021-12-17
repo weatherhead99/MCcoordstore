@@ -47,5 +47,7 @@ setup(name="MCcoordstore",
                           "mpld3",
                           "werkzeug",
                           "flask-migrate",
-                          "itsdangerous"]
+                          "itsdangerous",
+                          "flask-restless-NG",
+                          "pytz"]
       )
