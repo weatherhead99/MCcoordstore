@@ -55,9 +55,12 @@ def setup_api(app, db):
     poi_preproc = {"GET_COLLECTION" : [remove_nonpublic_collection_poi],
                    "GET_RESOURCE" : [api_auth_check] }
     manager.create_api(PointOfInterest, methods=["GET"], collection_name="poi",
-                       additional_attributes=["coords"], exclude=["coord_x","coord_y","coord_z", "tags", "poiid"],
+                       additional_attributes=["coords", "typename"], exclude=["coord_x","coord_y","coord_z", "tags", "poiid"],
                        preprocessors=poi_preproc)
     
+    user_preproc = {"GET_COLLECTION" : [api_auth_check],
+                    "GET_RESOURCE" : [api_auth_check]}
+    
     manager.create_api(User, methods=["GET"],
-                       exclude=["hashed_pw", "tags", "userid"])
-
+                       exclude=["hashed_pw", "tags", "userid", "username"],
+                       preprocessors=user_preproc)

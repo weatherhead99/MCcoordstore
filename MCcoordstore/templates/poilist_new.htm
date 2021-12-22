@@ -1,0 +1,90 @@
+{% extends "base.htm" %}
+
+
+{% block content %}
+
+
+<h2> List of POIs </h2>
+
+<div id="ajaxresult"> </div>
+
+<table class="poi_list" id="list_of_pois">
+  <th>Name</th>
+  <th>X</th>
+  <th>Y</th>
+  <th>Z</th>
+  <th>type</th>
+  <th>created by</th>
+  <th>created at</th>
+</table>
+
+<script>
+  function fillPOItable(jsondata) {
+      var table = document.getElementById("list_of_pois");
+      for(item of jsondata["data"])
+      {
+	  var row = table.insertRow(-1);
+	  var namecell = row.insertCell(-1);
+	  namecell.innerHTML = item["attributes"]["name"];
+
+	  var xcell = row.insertCell(-1);
+	  xcell.innerHTML = item["attributes"]["coords"][0];
+
+	  var ycell = row.insertCell(-1);
+	  ycell.innerHTML = item["attributes"]["coords"][1];
+
+	  var zcell = row.insertCell(-1);
+	  zcell.innerHTML = item["attributes"]["coords"][2];
+
+	  //TODO: do this lookup on client side, probably
+	  var typecell = row.insertCell(-1);
+	  typecell.innerHTML = item["attributes"]["typename"];
+
+	  var usercell = row.insertCell(-1);
+	  var userid = item["relationships"]["user"]["data"]["id"];
+	  var userdisplayres = jsondata["included"].filter(x => x["id"] ==
+							   userid);
+	  if(userdisplayres.length > 1)
+	      throw "logic error: duplicate user display results";
+
+	 
+	  var userdisplay = userdisplayres[0]["attributes"]["displayname"];
+	  
+	  usercell.innerHTML = userdisplay;
+
+	  var datecell = row.insertCell(-1);
+	  var createdat = new Date(item["attributes"]["create_date"].trim());
+	  datecell.innerHTML = createdat.toLocaleString();
+      }
+  };
+  
+
+  async function fetch_pois() {
+      options = {method: "GET",
+		 headers: {"Accept": "application/vnd.api+json"},
+		 credentials: "same-origin"};
+      url = new URL("/api/poi", document.URL);
+      params = [["page[number]", "0"], ["include", "user"]];
+      url.search = new URLSearchParams(params).toString();
+      
+      for(;;)
+      {
+	  const response = await fetch(url, options);
+	  console.log(response);
+	  const rjson = await response.json();
+	  console.log(rjson);
+	  if(rjson["links"]["next"] == null)
+	      break;
+	  fillPOItable(rjson);
+	  url = rjson["links"]["next"];
+      }
+     
+      
+  }
+
+  fetch_pois();
+</script>
+
+
+
+{% endblock %}

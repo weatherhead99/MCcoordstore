@@ -168,6 +168,10 @@ def logout():
 def dump_pois():
     return serialize_pois(app, db)
 
+
+@app.route("/poilist")
+def poi_list():
+    return render_template("poilist_new.htm")
     
     
     

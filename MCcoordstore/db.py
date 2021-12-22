@@ -149,6 +149,10 @@ class PointOfInterest(db.Model):
     def coords(self):
         return (self.coord_x, self.coord_y, self.coord_z)
     
+    @property
+    def typename(self):
+        return POI_NAME_LOOKUP[self.coordtype]
+    
     @coords.setter
     def coords(self, val: Sequence[int]):
         if len(val) != 3:
