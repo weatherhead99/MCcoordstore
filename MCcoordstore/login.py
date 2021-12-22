@@ -28,7 +28,13 @@ def load_user(user_id: str):
 
 @lman.request_loader
 def request_loader(request):
-    token = request.args.get("api_token")
+    token = request.args.get("token")
+    if not token:
+        #try header based auth
+        token = request.headers.get("Authorization")
+        if token:
+            token = token.replace("Basic ", "", 1)
+    
     if token:
         try:
             usr = User.verify_api_token(current_app, token)

@@ -18,10 +18,11 @@
 from flask import Blueprint, jsonify, current_app, request
 from flask.blueprints import BlueprintSetupState
 from flask_login import LoginManager, login_required, current_user
-from .db import User
+from .db import User, PointOfInterest
 import base64
 from MCcoordstore import db
-
+from flask_restless import APIManager, ProcessingException
+from .serializers import POISerializer
 
 poi_api = Blueprint("poi", __name__)
 
@@ -36,11 +37,27 @@ def get_token():
     
     return jsonify({"token" : token,
                     "error" : ""})
+    
 
-@poi_api.route("/")
-@login_required
-def list_pois():
+def api_auth_check(*args, **kwargs):
+    if not current_user.is_authenticated:
+        raise ProcessingException(detail="not authenticated", status=401)
+        
+def remove_nonpublic_collection_poi(filters, **kwargs):
+    if not current_user.is_authenticated:
+        filters.append({"name": "public", "op": "eq", "val" : True})
+
     
-    print("listing_pois")
-    return jsonify({"error" : "not implemented yet!"})
+def setup_api(app, db):
+    manager = APIManager(app, session=db.session)
     
+    
+    poi_preproc = {"GET_COLLECTION" : [remove_nonpublic_collection_poi],
+                   "GET_RESOURCE" : [api_auth_check] }
+    manager.create_api(PointOfInterest, methods=["GET"], collection_name="poi",
+                       additional_attributes=["coords"], exclude=["coord_x","coord_y","coord_z", "tags", "poiid"],
+                       preprocessors=poi_preproc)
+    
+    manager.create_api(User, methods=["GET"],
+                       exclude=["hashed_pw", "tags", "userid"])
+

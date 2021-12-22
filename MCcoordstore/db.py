@@ -81,14 +81,14 @@ class User(UserMixin, db.Model):
     def generate_api_token(self, app, expiration_seconds: int = 86400) -> bytes:
         secret_key = app.config["SECRET_KEY"]
         ser = TimedJSONWebSignatureSerializer(secret_key, expiration_seconds)
-        return ser.dumps({"userid" : self.altid}).decode("ASCII")
+        return ser.dumps({"userid" : self.alternate_id}).decode("ASCII")
     
     @classmethod
     def verify_api_token(cls, app, token: bytes):
         secret_key = app.config["SECRET_KEY"]
         ser = TimedJSONWebSignatureSerializer(secret_key)
         data = ser.loads(token)
-        user = cls.query.filter_by(alternate_id=data["userid"])
+        user = cls.query.filter_by(alternate_id=data["userid"]).one()
         return user        
 
     @classmethod
