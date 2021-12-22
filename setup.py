@@ -49,5 +49,6 @@ setup(name="MCcoordstore",
                           "flask-migrate",
                           "itsdangerous",
                           "flask-restless-NG",
-                          "pytz"]
+                          "pytz",
+                          "python-dotenv"]
       )

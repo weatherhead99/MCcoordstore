@@ -30,7 +30,8 @@ from flask_login import UserMixin
 from itsdangerous import TimedJSONWebSignatureSerializer
 import enum
 from random import randint
-
+from flask_migrate import stamp
+import os
 
 convention = {
     "ix": 'ix_%(column_0_label)s',
@@ -207,7 +208,8 @@ def create_db_command(admin_pass):
     from flask import current_app
     db.init_app(current_app)
     create_db(admin_pass, db)
-    
+    migdir = os.path.abspath(os.path.dirname(__file__)) + os.path.sep + "migrations"
+    stamp(directory=migdir)
     
 
 

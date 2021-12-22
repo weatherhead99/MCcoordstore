@@ -64,8 +64,8 @@ def create_app(test_config: Dict[str, Any]=None):
 
     with app.app_context():
         manager = APIManager(app, session=db.session)
+        manager.create_api(PointOfInterest, methods=["GET"])
         manager.create_api(User, methods=["GET"])
-
     return app
 
     
