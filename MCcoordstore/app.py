@@ -37,29 +37,9 @@ db = get_db(app)
 
 @app.route("/", methods=["POST", "GET"])
 def index():
-    locplot = LocationsPlot()
-
     
-    if current_user and current_user.is_authenticated:
-        pois = PointOfInterest.query.order_by(PointOfInterest.name).all()
-    else:
-        pois = PointOfInterest.query.filter_by(public=True).order_by(PointOfInterest.name).all()
-    
-    
-    for poi in pois:
-        if poi.create_date.tzinfo is None:
-            poi.create_date = pytz.utc.localize(poi.create_date)
-
-    locplot.xdat = [_.coords[0] for _ in pois]
-    locplot.zdat = [_.coords[2] for _ in pois]
-    locplot.update_plot()
-
     form = AddPOIForm()
     if form.validate_on_submit():
-        #TODO: user guest only for now
-        print("coordtp: %s" % form.data["coordtp"])
-        print("coordtp tp : %s" % str(type(form.data["coordtp"])))
-        
         poi = PointOfInterest(name=form.data["name"], public=form.data["public"], user=current_user,
                               coordtype=form.data["coordtp"])
         poi.coords = form.coords
@@ -68,8 +48,7 @@ def index():
         db.session.commit()
         return redirect("/")
 
-    return render_template("index.htm", map_html_2d = Markup(locplot.rendered_html),
-                           poi_table_data = pois, form=form, poi_name_lookup=POI_NAME_LOOKUP)
+    return render_template("index.htm", form=form)
 
 
 @app.route("/add_manual", methods=["POST","GET"])
@@ -168,6 +147,16 @@ def logout():
 def dump_pois():
     return serialize_pois(app, db)
 
-    
-    
-    
+
+@app.route("/poilist", methods=["POST","GET"])
+def poi_list():
+
+    form = AddPOIForm()
+    if form.validate_on_submit():
+        poi = PointOfInterest(name=form.data["name"], public=form.data["public"], user=current_user, coordtype=form.data["coordtp"])
+        poi.coords = form.coords
+        db.session.add(poi)
+        db.session.commit()
+        return redirect("/")
+    return render_template("poilist_new.htm", form=form)
+

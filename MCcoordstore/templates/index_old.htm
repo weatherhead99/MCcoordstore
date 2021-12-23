@@ -1,0 +1,90 @@
+{% extends "base.htm" %}
+
+{% block content %}
+
+<script src="static/scripts/table_utils.js"></script>
+
+
+<h1>Minecraft Points of Interest </h1>
+
+    <h2> 2D Map </h2>
+    <p> Only shows the Overworld at the moment! </p>
+    {% if map_html_2d %}
+    {{map_html_2d}}
+    {% endif %}
+
+{% if current_user.is_authenticated %}
+  <h2>Add new POI</h2>
+  <form method="post" class="poiform">
+  {{ form.csrf_token }}
+  {{ form.name.label }} {{ form.name }}
+  {{ form.x.label }} {{ form.x(class_="coordnum") }}
+  {{ form.y.label }} {{ form.y(class_="coordnum") }}
+{{ form.z.label }} {{ form.z(class_="coordnum") }}
+{{form.coordtp.label}} {{form.coordtp}}
+  {{ form.public.label }} {{ form.public }}
+  <input type="submit">
+  </form>
+{% endif %}
+
+<h2> List of POIs </h2>
+<p>Click on a table header to sort by that attribute. Click again to reverse direction of sorting</p>
+
+<table class="poi_list" id="list_of_pois">
+  <tr>
+    <th onclick="sortTable('list_of_pois', 'tr_poiname')">Name</th>
+    <th onclick="sortTable('list_of_pois', 'tr_poix')">X</th>
+    <th onclick="sortTable('list_of_pois', 'tr_poiy')">Y</th>
+    <th onclick="sortTable('list_of_pois', 'tr_poiz')">Z</th>
+    <th onclick="sortTable('list_of_pois', 'tr_poitype')">type </th>
+    <th onclick="sortTable('list_of_pois', 'tr_poiuser')">created by</th>
+    <th onclick="sortTable('list_of_pois', 'table-date-localize')">created at</th>
+  </tr>
+{#      MCcoordstore - simple web based store for Minecraft points of interest
+#      Copyright (C) 2021  Daniel Philip Weatherill
+
+#      This program is free software: you can redistribute it and/or modify it
+# under the terms of the GNU Affero General Public License as published by the
+# Free Software Foundation, either version 3 of the License, or (at your option)
+# any later version.
+
+#      This program is distributed in the hope that it will be useful, but WITHOUT
+# ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or FITNESS
+# FOR A PARTICULAR PURPOSE.  See the GNU Affero General Public License for more
+# details.
+
+#      You should have received a copy of the GNU Affero General Public License
+# along with this program.  If not, see <http://www.gnu.org/licenses/>.
+#}
+
+
+  
+  {% for poi in poi_table_data %}
+  <tr id="poi{{poi.poiid}}" class="tr_poiid">
+    <td id="name{{poi.poiid}}" class="tr_poiname">{{ poi.name }} </td>
+    <td id="x{{poi.poiid}}" class="tr_poix" data-isnum="1">{{ poi.coord_x }} </td>
+    <td id="y{{poi.poiid}}" class="tr_poiy" data-isnum="1">{{ poi.coord_y }} </td>
+    <td id="z{{poi.poiid}}" class="tr_poiz" data-isnum="1">{{ poi.coord_z }} </td>
+    <td id="type{{poi.poiid}}" class="tr_poitype"> {{poi_name_lookup[poi.coordtype]}} </td>
+    <td id="displayname{{poi.poiid}}" class="tr_poiuser">{{ poi.user.displayname }}</td>
+    <td id="date{{poi.poiid}}" class="table-date-localize">{{ poi.create_date.isoformat() }}</td>
+    {% if poi.user == current_user %}
+    <td> <a href="/poi/delete/{{poi.poiid}}"> delete </a></td>
+    {% endif %}
+  </tr>
+  {% endfor %}
+</table>
+
+<script>
+    var daterows = document.getElementsByClassName("table-date-localize");
+for(let date of daterows)
+{
+    var rawdate = date.innerHTML;
+    date.innerHTML = convertUTCdtToLocal(rawdate);
+}
+
+</script>
+
+
+{% endblock %}
+

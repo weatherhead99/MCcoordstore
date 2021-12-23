@@ -30,7 +30,8 @@ from flask_login import UserMixin
 from itsdangerous import TimedJSONWebSignatureSerializer
 import enum
 from random import randint
-
+from flask_migrate import stamp
+import os
 
 convention = {
     "ix": 'ix_%(column_0_label)s',
@@ -80,14 +81,14 @@ class User(UserMixin, db.Model):
     def generate_api_token(self, app, expiration_seconds: int = 86400) -> bytes:
         secret_key = app.config["SECRET_KEY"]
         ser = TimedJSONWebSignatureSerializer(secret_key, expiration_seconds)
-        return ser.dumps({"userid" : self.altid}).decode("ASCII")
+        return ser.dumps({"userid" : self.alternate_id}).decode("ASCII")
     
     @classmethod
     def verify_api_token(cls, app, token: bytes):
         secret_key = app.config["SECRET_KEY"]
         ser = TimedJSONWebSignatureSerializer(secret_key)
         data = ser.loads(token)
-        user = cls.query.filter_by(alternate_id=data["userid"])
+        user = cls.query.filter_by(alternate_id=data["userid"]).one()
         return user        
 
     @classmethod
@@ -97,6 +98,8 @@ class User(UserMixin, db.Model):
         while rcquery(randchoice) is not None:
             randchoice = randint(cls.MIN_ALTERNATE_ID, cls.MAX_ALTERNATE_ID)
         return randchoice
+
+
 
 
 
@@ -147,6 +150,10 @@ class PointOfInterest(db.Model):
     @property
     def coords(self):
         return (self.coord_x, self.coord_y, self.coord_z)
+    
+    @property
+    def typename(self):
+        return POI_NAME_LOOKUP[self.coordtype]
     
     @coords.setter
     def coords(self, val: Sequence[int]):
@@ -207,7 +214,8 @@ def create_db_command(admin_pass):
     from flask import current_app
     db.init_app(current_app)
     create_db(admin_pass, db)
-    
+    migdir = os.path.abspath(os.path.dirname(__file__)) + os.path.sep + "migrations"
+    stamp(directory=migdir)
     
 
 

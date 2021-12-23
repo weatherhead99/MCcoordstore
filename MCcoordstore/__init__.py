@@ -24,10 +24,10 @@ from flask_login import LoginManager
 from flask_migrate import Migrate
 from flask_sqlalchemy import SQLAlchemy
 import base64
-from .api_poi import poi_api
+from .api_poi import poi_api, setup_api
 from .login import lman
 from .db import User, RenderStyle, CoordType, PointOfInterest, Tag
-from flask_restless import APIManager
+
 
 
 CONFIG_ENVVAR = "MCCOORDSTORE_CONFIG"
@@ -63,9 +63,7 @@ def create_app(test_config: Dict[str, Any]=None):
     migrate = Migrate(app,db, render_as_batch=True)
 
     with app.app_context():
-        manager = APIManager(app, session=db.session)
-        manager.create_api(User, methods=["GET"])
-
+        setup_api(app, db)
     return app
 
     
