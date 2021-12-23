@@ -9,21 +9,30 @@
 <div id="ajaxresult"> </div>
 
 <table class="poi_list" id="list_of_pois">
-  <th>Name</th>
-  <th>X</th>
-  <th>Y</th>
-  <th>Z</th>
-  <th>type</th>
-  <th>created by</th>
-  <th>created at</th>
+  <th onclick="fetch_pois('name')">Name</th>
+  <th onclick="fetch_pois('coord_x')">X</th>
+  <th onclick="fetch_pois('coord_y')">Y</th>
+  <th onclick="fetch_pois('coord_z')">Z</th>
+  <th onclick="fetch_pois('coordtype')">type</th>
+  <th onclick="fetch_pois('user.displayname')">created by</th>
+  <th onclick="fetch_pois('create_date')">created at</th>
 </table>
 
 <script>
+  function clearPOItable() {
+      var rows = document.getElementsByClassName("poi_row");
+      console.log(rows.length);
+      while(rows.length > 0)
+	  rows[0].remove();
+  };  
+
   function fillPOItable(jsondata) {
       var table = document.getElementById("list_of_pois");
       for(item of jsondata["data"])
       {
+	  
 	  var row = table.insertRow(-1);
+	  row.className = "poi_row";
 	  var namecell = row.insertCell(-1);
 	  namecell.innerHTML = item["attributes"]["name"];
 
@@ -58,31 +67,49 @@
       }
   };
   
+  var ordermap =  new Map();
 
-  async function fetch_pois() {
+  async function fetch_pois(sortkey=null) {
       options = {method: "GET",
 		 headers: {"Accept": "application/vnd.api+json"},
 		 credentials: "same-origin"};
-      url = new URL("/api/poi", document.URL);
-      params = [["page[number]", "0"], ["include", "user"]];
+      url = new URL("/api/poi", document.URL)
+      params = [["page[number]", "1"], ["include", "user"],
+		["fields[user]", "displayname"]];
+      if(sortkey != null)
+      {
+	  if( ! (sortkey  in ordermap))
+	  {
+	      ordermap[sortkey] = true;
+	  }
+	  else if(ordermap[sortkey])
+	  {
+	      ordermap[sortkey] = false;
+	      sortkey = "-" + sortkey;
+	  }
+	  else
+	  {
+	      ordermap[sortkey] = true;
+	  }
+	   params.push(["sort", String(sortkey)]);
+      }
       url.search = new URLSearchParams(params).toString();
-      
+
+      clearPOItable();
+
       for(;;)
       {
 	  const response = await fetch(url, options);
-	  console.log(response);
 	  const rjson = await response.json();
-	  console.log(rjson);
 	  if(rjson["links"]["next"] == null)
 	      break;
 	  fillPOItable(rjson);
 	  url = rjson["links"]["next"];
-      }
-     
-      
+      }   
   }
 
-  fetch_pois();
+  fetch_pois("name");
+  
 </script>
 
 
