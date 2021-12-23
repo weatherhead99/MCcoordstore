@@ -169,9 +169,15 @@ def dump_pois():
     return serialize_pois(app, db)
 
 
-@app.route("/poilist")
+@app.route("/poilist", methods=["POST","GET"])
 def poi_list():
-    return render_template("poilist_new.htm")
-    
-    
-    
+
+    form = AddPOIForm()
+    if form.validate_on_submit():
+        poi = PointOfInterest(name=form.data["name"], public=form.data["public"], user=current_user, coordtype=form.data["coordtp"])
+        poi.coords = form.coords
+        db.session.add(poi)
+        db.session.commit()
+        return redirect("/")
+    return render_template("poilist_new.htm", form=form)
+
