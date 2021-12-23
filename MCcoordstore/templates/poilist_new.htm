@@ -3,9 +3,206 @@
 
 {% block content %}
 
+<script src="https://cdn.plot.ly/plotly-2.8.3.min.js"></script>
+
+<script>
+  function clearPOItable() {
+      var rows = document.getElementsByClassName("poi_row");
+      while(rows.length > 0)
+	  rows[0].remove();
+  };  
+
+  function fillPOItable(jsondata) {
+      var table = document.getElementById("list_of_pois");
+      var myuserid = document.getElementById("current_user_id").innerHTML;
+      for(item of jsondata["data"])
+      {
+	  
+	  var row = table.insertRow(-1);
+	  row.className = "poi_row";
+	  var namecell = row.insertCell(-1);
+	  namecell.innerHTML = item["attributes"]["name"];
+
+	  var xcell = row.insertCell(-1);
+	  xcell.innerHTML = item["attributes"]["coords"][0];
+
+	  var ycell = row.insertCell(-1);
+	  ycell.innerHTML = item["attributes"]["coords"][1];
+
+	  var zcell = row.insertCell(-1);
+	  zcell.innerHTML = item["attributes"]["coords"][2];
+
+	  //TODO: do this lookup on client side, probably
+	  var typecell = row.insertCell(-1);
+	  typecell.innerHTML = item["attributes"]["typename"];
+
+	  var usercell = row.insertCell(-1);
+	  var userdisplay = lookupUserDisplayName(item, jsondata);
+	  
+	  usercell.innerHTML = userdisplay;
+
+	  var datecell = row.insertCell(-1);
+	  var createdat = new Date(item["attributes"]["create_date"].trim());
+	  datecell.innerHTML = createdat.toLocaleString();
+
+	  if(Number(item["relationships"]["user"]["data"]["id"]) == Number(myuserid))
+	  {
+	      var deletecell = row.insertCell(-1);
+	      var poiid = item["id"]
+	      var deletelink ='<a href="/poi/delete/' + poiid + '">delete</a>';
+	      deletecell.innerHTML = deletelink;
+
+	  }
+
+	  
+      }
+  };
+
+  var overworlddom = null;
+  var netherdom = null;
+  var overworldplot = null;
+  var netherplot = null;
+  
+  var overworldplotdata = { x : [],
+			    y : [],
+			    text : [],
+			    mode: "markers",
+			    type: "scatter"};
+  var overworldlayout = {
+      autosize : true,
+      automargin: true,
+      title: "Overworld",
+      xaxis : { title : "X"},
+      yaxis : { title : "Z"}
+  };
+  
+  var netherplotdata = { x : [],
+			 y : [],
+			 text : [],
+			 mode: "markers",
+			 type: "scatter"};
+
+  var netherlayout = {
+      autosize : true,
+      automargin : true,
+      title: "The Nether",
+      xaxis : { title : "X"},
+      yaxis : { title : "Z"}
+  };
+
+  var plotconfig = {
+      responsive : true,
+      modeBarButtonsToRemove : ["select2d", "lasso2d"],
+      scrollZoom : true
+  };
+
+  function lookupUserDisplayName(poiitem, jsondata)
+  {
+      var userid = poiitem["relationships"]["user"]["data"]["id"];
+      var flt = jsondata["included"].filter(x => x["id"] == userid);
+      if(flt.length > 1)
+	  throw "logic error: multiple duplicate users found!";
+      return flt[0]["attributes"]["displayname"];
+  }
+  
+  function plotpoints(jsondata)
+  {
+      for(item of jsondata["data"])
+      {
+	  var attrs = item["attributes"];
+	  var txt = attrs["name"];
+	  if(attrs["coordtype"] =="OVERWORLD")
+	  {
+	      Plotly.extendTraces(overworlddom, {x : [[attrs["coords"][0]]],
+						 y : [[attrs["coords"][2]]],
+						 text: [[txt]]}, [0]);
+	  }
+	  else if( item["attributes"]["coordtype"] == "NETHER")
+	  {
+	      Plotly.extendTraces(netherdom, {x  : [[attrs["coords"][0]]],
+					      y : [[attrs["coords"][2]]],
+					      text: [[txt]]}, [0]);
+	  }
+	  else
+	  {
+	  }
+
+      };
+
+  };
+
+  
+  var ordermap =  new Map();
+  
+  async function fetch_pois(sortkey=null) {
+      options = {method: "GET",
+		 headers: {"Accept": "application/vnd.api+json"},
+		 credentials: "same-origin"};
+      url = new URL("/api/poi", document.URL)
+      params = [["page[number]", "1"], ["include", "user"],
+		["fields[user]", "displayname"]];
+      if(sortkey != null)
+      {
+	  if( !(sortkey  in ordermap))
+	  {
+	      ordermap[sortkey] = true;
+	  }
+	  else if(ordermap[sortkey])
+	  {
+	      ordermap[sortkey] = false;
+	      sortkey = "-" + sortkey;
+	  }
+	  else
+	  {
+	      ordermap[sortkey] = true;
+	  }
+	   params.push(["sort", String(sortkey)]);
+      }
+      url.search = new URLSearchParams(params).toString();
+
+      console.log("got to here");
+      netherplotdata.x.length = 0;
+      netherplotdata.y.length = 0;
+      overworldplotdata.x.length = 0;
+      overworldplotdata.y.length = 0;
+
+
+      clearPOItable();
+      for(;;)
+      {
+	  const response = await fetch(url, options);
+	  const rjson = await response.json();
+	  if(rjson["links"]["next"] == null)
+	      break;
+
+	  fillPOItable(rjson);
+	  plotpoints(rjson);
+	
+	  url = rjson["links"]["next"];
+      }   
+  }
+
+  
+</script>
+
+
 <h1> Minecraft Points of Interest </h1>
 
-<h2> Add new POI </h2>
+<h2>POI map</h2>
+<div>
+<div class="poigraph" id="poi-overworldgraph"></div>
+<div class="poigraph" id="poi-nethergraph"></div>
+</div>
+
+<script>
+  overworlddom = document.getElementById("poi-overworldgraph");
+  netherdom = document.getElementById("poi-nethergraph");
+
+  Plotly.newPlot(overworlddom, [overworldplotdata], overworldlayout, plotconfig);
+  Plotly.newPlot(netherdom, [netherplotdata], netherlayout, plotconfig);
+  
+</script>
+
 {% if current_user.is_authenticated %}
   <h2>Add new POI</h2>
   <form method="post" class="poiform">
@@ -36,112 +233,8 @@
 </table>
 
 <script>
-  function clearPOItable() {
-      var rows = document.getElementsByClassName("poi_row");
-      console.log(rows.length);
-      while(rows.length > 0)
-	  rows[0].remove();
-  };  
-
-  function fillPOItable(jsondata) {
-      var table = document.getElementById("list_of_pois");
-      var myuserid = document.getElementById("current_user_id").innerHTML;
-      for(item of jsondata["data"])
-      {
-	  
-	  var row = table.insertRow(-1);
-	  row.className = "poi_row";
-	  var namecell = row.insertCell(-1);
-	  namecell.innerHTML = item["attributes"]["name"];
-
-	  var xcell = row.insertCell(-1);
-	  xcell.innerHTML = item["attributes"]["coords"][0];
-
-	  var ycell = row.insertCell(-1);
-	  ycell.innerHTML = item["attributes"]["coords"][1];
-
-	  var zcell = row.insertCell(-1);
-	  zcell.innerHTML = item["attributes"]["coords"][2];
-
-	  //TODO: do this lookup on client side, probably
-	  var typecell = row.insertCell(-1);
-	  typecell.innerHTML = item["attributes"]["typename"];
-
-	  var usercell = row.insertCell(-1);
-	  var userid = item["relationships"]["user"]["data"]["id"];
-	  var userdisplayres = jsondata["included"].filter(x => x["id"] ==
-							   userid);
-	  if(userdisplayres.length > 1)
-	      throw "logic error: duplicate user display results";
-
-	 
-	  var userdisplay = userdisplayres[0]["attributes"]["displayname"];
-	  
-	  usercell.innerHTML = userdisplay;
-
-	  var datecell = row.insertCell(-1);
-	  var createdat = new Date(item["attributes"]["create_date"].trim());
-	  datecell.innerHTML = createdat.toLocaleString();
-
-	  if(Number(userid) == Number(myuserid))
-	  {
-	      var deletecell = row.insertCell(-1);
-	      var poiid = item["id"]
-	      var deletelink ='<a href="/poi/delete/' + poiid + '">delete</a>';
-	      console.log(deletelink);
-	      deletecell.innerHTML = deletelink;
-
-	  }
-
-	  
-      }
-  };
-  
-  var ordermap =  new Map();
-
-  async function fetch_pois(sortkey=null) {
-      options = {method: "GET",
-		 headers: {"Accept": "application/vnd.api+json"},
-		 credentials: "same-origin"};
-      url = new URL("/api/poi", document.URL)
-      params = [["page[number]", "1"], ["include", "user"],
-		["fields[user]", "displayname"]];
-      if(sortkey != null)
-      {
-	  if( ! (sortkey  in ordermap))
-	  {
-	      ordermap[sortkey] = true;
-	  }
-	  else if(ordermap[sortkey])
-	  {
-	      ordermap[sortkey] = false;
-	      sortkey = "-" + sortkey;
-	  }
-	  else
-	  {
-	      ordermap[sortkey] = true;
-	  }
-	   params.push(["sort", String(sortkey)]);
-      }
-      url.search = new URLSearchParams(params).toString();
-
-      clearPOItable();
-
-      for(;;)
-      {
-	  const response = await fetch(url, options);
-	  const rjson = await response.json();
-	  if(rjson["links"]["next"] == null)
-	      break;
-	  fillPOItable(rjson);
-	  url = rjson["links"]["next"];
-      }   
-  }
-
   fetch_pois("name");
-  
 </script>
-
 
 
 {% endblock %}
