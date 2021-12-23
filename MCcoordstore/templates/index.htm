@@ -1,17 +1,207 @@
 {% extends "base.htm" %}
 
+
 {% block content %}
 
-<script src="static/scripts/table_utils.js"></script>
+<script src="https://cdn.plot.ly/plotly-2.8.3.min.js"></script>
+
+<script>
+  function clearPOItable() {
+      var rows = document.getElementsByClassName("poi_row");
+      while(rows.length > 0)
+	  rows[0].remove();
+  };  
+
+  function fillPOItable(jsondata) {
+      var table = document.getElementById("list_of_pois");
+      var myuserid = document.getElementById("current_user_id").innerHTML;
+      for(item of jsondata["data"])
+      {
+	  
+	  var row = table.insertRow(-1);
+	  row.className = "poi_row";
+	  var namecell = row.insertCell(-1);
+	  namecell.innerHTML = item["attributes"]["name"];
+
+	  var xcell = row.insertCell(-1);
+	  xcell.innerHTML = item["attributes"]["coords"][0];
+
+	  var ycell = row.insertCell(-1);
+	  ycell.innerHTML = item["attributes"]["coords"][1];
+
+	  var zcell = row.insertCell(-1);
+	  zcell.innerHTML = item["attributes"]["coords"][2];
+
+	  //TODO: do this lookup on client side, probably
+	  var typecell = row.insertCell(-1);
+	  typecell.innerHTML = item["attributes"]["typename"];
+
+	  var usercell = row.insertCell(-1);
+	  var userdisplay = lookupUserDisplayName(item, jsondata);
+	  
+	  usercell.innerHTML = userdisplay;
+
+	  var datecell = row.insertCell(-1);
+	  var createdat = new Date(item["attributes"]["create_date"].trim());
+	  datecell.innerHTML = createdat.toLocaleString();
+
+	  if(Number(item["relationships"]["user"]["data"]["id"]) == Number(myuserid))
+	  {
+	      var deletecell = row.insertCell(-1);
+	      var poiid = item["id"]
+	      var deletelink ='<a href="/poi/delete/' + poiid + '">delete</a>';
+	      deletecell.innerHTML = deletelink;
+
+	  }
+
+	  
+      }
+  };
+
+  var overworlddom = null;
+  var netherdom = null;
+  var overworldplot = null;
+  var netherplot = null;
+  
+  var overworldplotdata = { x : [],
+			    y : [],
+			    text : [],
+			    mode: "markers",
+			    type: "scatter"};
+  var overworldlayout = {
+      autosize : true,
+      automargin: true,
+      title: "Overworld",
+      xaxis : { title : "X"},
+      yaxis : { title : "Z"}
+  };
+  
+  var netherplotdata = { x : [],
+			 y : [],
+			 text : [],
+			 mode: "markers",
+			 type: "scatter"};
+
+  var netherlayout = {
+      autosize : true,
+      automargin : true,
+      title: "The Nether",
+      xaxis : { title : "X"},
+      yaxis : { title : "Z"}
+  };
+
+  var plotconfig = {
+      responsive : true,
+      modeBarButtonsToRemove : ["select2d", "lasso2d"],
+      scrollZoom : true
+  };
+
+  function lookupUserDisplayName(poiitem, jsondata)
+  {
+      var userid = poiitem["relationships"]["user"]["data"]["id"];
+      var flt = jsondata["included"].filter(x => x["id"] == userid);
+      if(flt.length > 1)
+	  throw "logic error: multiple duplicate users found!";
+      return flt[0]["attributes"]["displayname"];
+  }
+  
+  function plotpoints(jsondata)
+  {
+      for(item of jsondata["data"])
+      {
+	  var attrs = item["attributes"];
+	  var txt = attrs["name"];
+	  if(attrs["coordtype"] =="OVERWORLD")
+	  {
+	      Plotly.extendTraces(overworlddom, {x : [[attrs["coords"][0]]],
+						 y : [[attrs["coords"][2]]],
+						 text: [[txt]]}, [0]);
+	  }
+	  else if( item["attributes"]["coordtype"] == "NETHER")
+	  {
+	      Plotly.extendTraces(netherdom, {x  : [[attrs["coords"][0]]],
+					      y : [[attrs["coords"][2]]],
+					      text: [[txt]]}, [0]);
+	  }
+	  else
+	  {
+	  }
+
+      };
+
+  };
+
+  
+  var ordermap =  new Map();
+  
+  async function fetch_pois(sortkey=null) {
+      options = {method: "GET",
+		 headers: {"Accept": "application/vnd.api+json"},
+		 credentials: "same-origin"};
+      url = new URL("/api/poi", document.URL)
+      params = [["page[number]", "1"], ["include", "user"],
+		["fields[user]", "displayname"]];
+      if(sortkey != null)
+      {
+	  if( !(sortkey  in ordermap))
+	  {
+	      ordermap[sortkey] = true;
+	  }
+	  else if(ordermap[sortkey])
+	  {
+	      ordermap[sortkey] = false;
+	      sortkey = "-" + sortkey;
+	  }
+	  else
+	  {
+	      ordermap[sortkey] = true;
+	  }
+	   params.push(["sort", String(sortkey)]);
+      }
+      url.search = new URLSearchParams(params).toString();
+
+      console.log("got to here");
+      netherplotdata.x.length = 0;
+      netherplotdata.y.length = 0;
+      overworldplotdata.x.length = 0;
+      overworldplotdata.y.length = 0;
 
 
-<h1>Minecraft Points of Interest </h1>
+      clearPOItable();
+      for(;;)
+      {
+	  const response = await fetch(url, options);
+	  const rjson = await response.json();
+	  if(rjson["links"]["next"] == null)
+	      break;
 
-    <h2> 2D Map </h2>
-    <p> Only shows the Overworld at the moment! </p>
-    {% if map_html_2d %}
-    {{map_html_2d}}
-    {% endif %}
+	  fillPOItable(rjson);
+	  plotpoints(rjson);
+	
+	  url = rjson["links"]["next"];
+      }   
+  }
+
+  
+</script>
+
+
+<h1> Minecraft Points of Interest </h1>
+
+<h2>POI map</h2>
+<div>
+<div class="poigraph" id="poi-overworldgraph"></div>
+<div class="poigraph" id="poi-nethergraph"></div>
+</div>
+
+<script>
+  overworlddom = document.getElementById("poi-overworldgraph");
+  netherdom = document.getElementById("poi-nethergraph");
+
+  Plotly.newPlot(overworlddom, [overworldplotdata], overworldlayout, plotconfig);
+  Plotly.newPlot(netherdom, [netherplotdata], netherlayout, plotconfig);
+  
+</script>
 
 {% if current_user.is_authenticated %}
   <h2>Add new POI</h2>
@@ -27,64 +217,24 @@
   </form>
 {% endif %}
 
+
 <h2> List of POIs </h2>
-<p>Click on a table header to sort by that attribute. Click again to reverse direction of sorting</p>
+
+<div id="current_user_id" hidden>{{current_user.userid}}</div>
 
 <table class="poi_list" id="list_of_pois">
-  <tr>
-    <th onclick="sortTable('list_of_pois', 'tr_poiname')">Name</th>
-    <th onclick="sortTable('list_of_pois', 'tr_poix')">X</th>
-    <th onclick="sortTable('list_of_pois', 'tr_poiy')">Y</th>
-    <th onclick="sortTable('list_of_pois', 'tr_poiz')">Z</th>
-    <th onclick="sortTable('list_of_pois', 'tr_poitype')">type </th>
-    <th onclick="sortTable('list_of_pois', 'tr_poiuser')">created by</th>
-    <th onclick="sortTable('list_of_pois', 'table-date-localize')">created at</th>
-  </tr>
-{#      MCcoordstore - simple web based store for Minecraft points of interest
-#      Copyright (C) 2021  Daniel Philip Weatherill
-
-#      This program is free software: you can redistribute it and/or modify it
-# under the terms of the GNU Affero General Public License as published by the
-# Free Software Foundation, either version 3 of the License, or (at your option)
-# any later version.
-
-#      This program is distributed in the hope that it will be useful, but WITHOUT
-# ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or FITNESS
-# FOR A PARTICULAR PURPOSE.  See the GNU Affero General Public License for more
-# details.
-
-#      You should have received a copy of the GNU Affero General Public License
-# along with this program.  If not, see <http://www.gnu.org/licenses/>.
-#}
-
-
-  
-  {% for poi in poi_table_data %}
-  <tr id="poi{{poi.poiid}}" class="tr_poiid">
-    <td id="name{{poi.poiid}}" class="tr_poiname">{{ poi.name }} </td>
-    <td id="x{{poi.poiid}}" class="tr_poix" data-isnum="1">{{ poi.coord_x }} </td>
-    <td id="y{{poi.poiid}}" class="tr_poiy" data-isnum="1">{{ poi.coord_y }} </td>
-    <td id="z{{poi.poiid}}" class="tr_poiz" data-isnum="1">{{ poi.coord_z }} </td>
-    <td id="type{{poi.poiid}}" class="tr_poitype"> {{poi_name_lookup[poi.coordtype]}} </td>
-    <td id="displayname{{poi.poiid}}" class="tr_poiuser">{{ poi.user.displayname }}</td>
-    <td id="date{{poi.poiid}}" class="table-date-localize">{{ poi.create_date.isoformat() }}</td>
-    {% if poi.user == current_user %}
-    <td> <a href="/poi/delete/{{poi.poiid}}"> delete </a></td>
-    {% endif %}
-  </tr>
-  {% endfor %}
+  <th onclick="fetch_pois('name')">Name</th>
+  <th onclick="fetch_pois('coord_x')">X</th>
+  <th onclick="fetch_pois('coord_y')">Y</th>
+  <th onclick="fetch_pois('coord_z')">Z</th>
+  <th onclick="fetch_pois('coordtype')">type</th>
+  <th onclick="fetch_pois('user.displayname')">created by</th>
+  <th onclick="fetch_pois('create_date')">created at</th>
 </table>
 
 <script>
-    var daterows = document.getElementsByClassName("table-date-localize");
-for(let date of daterows)
-{
-    var rawdate = date.innerHTML;
-    date.innerHTML = convertUTCdtToLocal(rawdate);
-}
-
+  fetch_pois("name");
 </script>
 
 
 {% endblock %}
-
