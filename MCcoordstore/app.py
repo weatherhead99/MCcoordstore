@@ -25,7 +25,6 @@ from flask_login import login_required, current_user, login_user, logout_user
 import pytz
 
 from MCcoordstore import create_app
-from .plots import LocationsPlot
 from .forms import AddPOIForm, SignupForm, LoginForm
 from .db import get_db, User, PointOfInterest, POI_NAME_LOOKUP
 from .utils import serialize_pois
@@ -146,17 +145,3 @@ def logout():
 @login_required
 def dump_pois():
     return serialize_pois(app, db)
-
-
-@app.route("/poilist", methods=["POST","GET"])
-def poi_list():
-
-    form = AddPOIForm()
-    if form.validate_on_submit():
-        poi = PointOfInterest(name=form.data["name"], public=form.data["public"], user=current_user, coordtype=form.data["coordtp"])
-        poi.coords = form.coords
-        db.session.add(poi)
-        db.session.commit()
-        return redirect("/")
-    return render_template("poilist_new.htm", form=form)
-
