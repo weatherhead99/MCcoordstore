@@ -44,7 +44,11 @@
     width: 10ch;
 }
 
-.poigraph {
-    float: left;
-    width: 50%;
+.columns {
+    display: flex;
 }
+
+.poigraph {
+    flex: 50%;
+}
+

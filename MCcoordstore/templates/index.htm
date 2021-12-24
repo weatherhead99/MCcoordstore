@@ -7,9 +7,10 @@
 
 <script>
   function clearPOItable() {
-      var rows = document.getElementsByClassName("poi_row");
-      while(rows.length > 0)
-	  rows[0].remove();
+      var table = document.getElementById("list_of_pois");
+      var rowarr = Array.prototype.slice.call(table.rows,1);
+      for(row of rowarr)
+	  row.remove();
   };  
 
   function fillPOItable(jsondata) {
@@ -73,7 +74,8 @@
       automargin: true,
       title: "Overworld",
       xaxis : { title : "X"},
-      yaxis : { title : "Z"}
+      yaxis : { title : "Z"},
+      width: "50%"
   };
   
   var netherplotdata = { x : [],
@@ -87,7 +89,8 @@
       automargin : true,
       title: "The Nether",
       xaxis : { title : "X"},
-      yaxis : { title : "Z"}
+      yaxis : { title : "Z"},
+      width : "50%"
   };
 
   var plotconfig = {
@@ -160,7 +163,6 @@
       }
       url.search = new URLSearchParams(params).toString();
 
-      console.log("got to here");
       netherplotdata.x.length = 0;
       netherplotdata.y.length = 0;
       overworldplotdata.x.length = 0;
@@ -172,11 +174,12 @@
       {
 	  const response = await fetch(url, options);
 	  const rjson = await response.json();
+	  fillPOItable(rjson);
+	  plotpoints(rjson);
+
 	  if(rjson["links"]["next"] == null)
 	      break;
 
-	  fillPOItable(rjson);
-	  plotpoints(rjson);
 	
 	  url = rjson["links"]["next"];
       }   
@@ -189,9 +192,12 @@
 <h1> Minecraft Points of Interest </h1>
 
 <h2>POI map</h2>
-<div>
-<div class="poigraph" id="poi-overworldgraph"></div>
-<div class="poigraph" id="poi-nethergraph"></div>
+<div class="columns">
+  <div class="poigraph">
+    <div id="poi-overworldgraph"></div></div>
+  <div class="poigraph">
+    <div id="poi-nethergraph"></div>
+  </div>
 </div>
 
 <script>

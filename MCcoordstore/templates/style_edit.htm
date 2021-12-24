@@ -3,8 +3,13 @@
 {% block content %}
 
 <script src="https://cdn.plot.ly/plotly-2.8.3.min.js"></script>
-<div id="styleplot"></div>
 
+<div class="columns">
+  <div class="poigraph" id="styleplot"></div>
+</div>
+
+<h2> test header </h2>
+<p>
 <form>
   Fill color: <input type="color" id="fillcolor" 
   onchange="updatePlot('fillcolor','marker.color')"><br>
@@ -15,13 +20,14 @@
 			       'marker.line.width')"><br>
   Symbol Size: <input type="range" min=5 max=50 value=20 id="symbolsize"
 		      onchange="updatePlot('symbolsize', 'marker.size')">
-  <div id="hiddenvalues">
+  <div id="hiddenvalues" hidden>
     Symbol type: <input type="text" id="symtype"> <br>
     SVG style: <input type="text" id="svgstyle"> <br>
     SVG path data: <input type="text" id="svgpathd"> <br>
    SVG item index: <input type="text" id="svgitemidx">
   </div>
 </form>
+</p>
 
 <script>
   var marker = Plotly.PlotSchema.get().traces.scatter.attributes.marker;
@@ -30,7 +36,7 @@
 					       true);
 
   var domplot = document.getElementById("styleplot");
-  var plotwidth = 20;
+  var plotwidth = 15;
   var iotarray = Array.from(Array(plotwidth).keys());
 
 
@@ -54,6 +60,12 @@
 			 line : {color: "#000000",
 				 width : 5}}
 	     };
+
+  var layout = {
+      xaxis : {visible: false},
+      yaxis : {visible: false},
+      width: "50%"
+  };
   
   var nrows = Math.floor(symstrings.length / plotwidth);
   var symslice = 0;
@@ -64,7 +76,7 @@
       data.marker.symbol.push(...symstrings.slice(symslice, symslice + plotwidth));
       symslice += plotwidth;
   }
-  var plot = Plotly.newPlot(domplot, [data]);
+  var plot = Plotly.newPlot(domplot, [data], layout);
   var svg = document.querySelectorAll("path.point");
 
   function update_hidden_forms(idx)
