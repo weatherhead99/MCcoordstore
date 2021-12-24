@@ -145,3 +145,7 @@ def logout():
 @login_required
 def dump_pois():
     return serialize_pois(app, db)
+
+@app.route("/styleedit")
+def style_edit():
+    return render_template("style_edit.htm")
