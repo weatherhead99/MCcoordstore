@@ -25,8 +25,8 @@ from flask_login import login_required, current_user, login_user, logout_user
 import pytz
 
 from MCcoordstore import create_app
-from .forms import AddPOIForm, SignupForm, LoginForm
-from .db import get_db, User, PointOfInterest, POI_NAME_LOOKUP
+from .forms import AddPOIForm, SignupForm, LoginForm, StyleEditForm
+from .db import get_db, User, PointOfInterest, POI_NAME_LOOKUP, RenderStyle
 from .utils import serialize_pois
 
 app = create_app()
@@ -146,6 +146,11 @@ def logout():
 def dump_pois():
     return serialize_pois(app, db)
 
-@app.route("/styleedit")
+@app.route("/styleedit", methods=["GET","POST"])
+@login_required
 def style_edit():
-    return render_template("style_edit.htm")
+    form = StyleEditForm()
+    if form.validate_on_submit():
+        flash("style updated", "flash-success")
+        return render_template("style_edit.htm", form=form)
+    return render_template("style_edit.htm", form=form)

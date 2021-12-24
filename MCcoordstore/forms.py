@@ -25,9 +25,11 @@ Created on Thu Dec  9 22:33:46 2021
 """
 
 from flask_wtf import FlaskForm
-from wtforms import StringField, IntegerField, PasswordField, BooleanField, SelectField
+from wtforms import StringField, IntegerField, PasswordField, BooleanField, SelectField, SubmitField
+from wtforms.fields import  HiddenField, IntegerRangeField
 from wtforms.validators import DataRequired, EqualTo
-
+from wtforms.widgets import ColorInput
+from markupsafe import Markup
 from .db import CoordType, POI_NAME_LOOKUP
 
 def _reqfield(func, *args, **kwargs):
@@ -61,4 +63,19 @@ class LoginForm(FlaskForm):
     password = _reqfield(PasswordField, "password")
     remember = BooleanField("remember me")
 
+
+octpl = Markup("updatePlot('{}','{}')")
     
+class StyleEditForm(FlaskForm):
+    stylename = _reqfield(StringField, "style name")
+    fillcolor = _reqfield(StringField, "fill colour", widget=ColorInput(),
+                          id="fillcolor", render_kw={"onchange" : octpl.format("fillcolor", "marker.color")})
+    linecolor = _reqfield(StringField, "line colour", widget=ColorInput(),
+                          id="linecolor", render_kw = {"onchange" : octpl.format("linecolor", "marker.line.color")})
+    
+    linewidth = _reqfield(IntegerRangeField, "line width", 
+                          id="linewidth", render_kw = {"onchange" : octpl.format("linewidth", "marker.line.width")})
+    symbolsize = _reqfield(IntegerRangeField, "symbol size",
+                           id="symbolsize", render_kw = {"onchange" : octpl.format("symbolsize", "marker.size")})
+
+    symbolname = _reqfield(HiddenField, id="symtype")

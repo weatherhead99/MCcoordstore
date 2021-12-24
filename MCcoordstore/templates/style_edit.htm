@@ -8,25 +8,31 @@
   <div class="poigraph" id="styleplot"></div>
 </div>
 
-<h2> test header </h2>
 <p>
-<form>
-  Fill color: <input type="color" id="fillcolor" 
-  onchange="updatePlot('fillcolor','marker.color')"><br>
-  Line color: <input type="color" id="linecolor" 
-  onchange="updatePlot('linecolor', 'marker.line.color')"><br>
-  Line Width: <input type="range" min=0 max=10 value=2 id="linewidth" 
-		     onchange="updatePlot('linewidth',
-			       'marker.line.width')"><br>
-  Symbol Size: <input type="range" min=5 max=50 value=20 id="symbolsize"
-		      onchange="updatePlot('symbolsize', 'marker.size')">
-  <div id="hiddenvalues" hidden>
-    Symbol type: <input type="text" id="symtype"> <br>
-    SVG style: <input type="text" id="svgstyle"> <br>
-    SVG path data: <input type="text" id="svgpathd"> <br>
-   SVG item index: <input type="text" id="svgitemidx">
-  </div>
+
+<form id="styleeditform"  method="post">
+  {{form.csrf_token}}
+  {{form.stylename.label}} {{form.stylename}} <br>
+  {{form.fillcolor.label}} {{form.fillcolor}} <br>
+  {{form.linecolor.label}} {{form.linecolor}} 
+  {{form.linewidth.label}} {{form.linewidth(min="0", max="10", value="2")}} <br>
+  {{form.symbolsize.label}} {{form.symbolsize(min="3", max="30", value="10")}} <br>
+  {{form.symbolname}}
+  <input type="submit" onsubmit="submit_check()">
 </form>
+
+<script>
+  function submit_check() {
+      const form = document.getElementById("styleeditform");
+      if(form.symbolname.value == "")
+      {
+	  alert("must select a symbol style (click on it!)");
+      }
+  };
+</script>
+
+
+
 </p>
 
 <script>
@@ -44,8 +50,8 @@
       var val = document.getElementById(domid).value;
       var update = {[prop] : String(val)};
       Plotly.restyle(domplot,update , 0);
-      var svgidx = Number(document.getElementById("svgitemidx").value);
-      update_hidden_forms(svgidx);
+      //var svgidx = Number(document.getElementById("svgitemidx").value);
+      //update_hidden_forms(svgidx);
       
   }
   
@@ -62,9 +68,17 @@
 	     };
 
   var layout = {
-      xaxis : {visible: false},
-      yaxis : {visible: false},
-      width: "50%"
+      autosize : true,
+      xaxis : {visible: false, automargin: true},
+      yaxis : {visible: false, automargin: true},
+      width: "50%",
+      margin : {
+	  l : 0,
+	  r : 0,
+	  t : 0,
+	  b : 0,
+	  pad : 4}
+
   };
   
   var nrows = Math.floor(symstrings.length / plotwidth);
@@ -104,9 +118,18 @@
 	  });
 
 
-  
+  const init_upds = new Map(
+      [["fillcolor", "marker.color"],
+       ["linecolor", "marker.line.color"],
+       ["linewidth", "marker.line.width"],
+       ["symbolsize", "marker.size"]]);
+  for([k,w] of init_upds.entries())
+  {
+      updatePlot(k, w);
 
+  };
   
+    
 </script>
 
 {% endblock %}

@@ -66,6 +66,8 @@ class User(UserMixin, db.Model):
     is_admin = db.Column(db.Boolean, default=False)
     
     alternate_id = db.Column(db.Integer, unique=True, nullable=False, server_default=_server_random_sqlite_range())
+    default_styleid = db.Column(db.Integer, db.ForeignKey("renderstyle.styleid"), nullable=True)
+    default_style = db.relationship("RenderStyle", foreign_keys=[default_styleid])
     
     
     @classmethod
@@ -108,6 +110,8 @@ class RenderStyle(db.Model):
     styleid = db.Column(db.Integer, primary_key = True)
     name = db.Column(db.String(80), nullable=True)
     style = db.Column(db.PickleType)
+    userid = db.Column(db.Integer, db.ForeignKey("user.userid"))
+    user = db.relationship("User", backref=db.backref("styles"), foreign_keys=[userid])
 
 
 class CoordType(enum.IntEnum):

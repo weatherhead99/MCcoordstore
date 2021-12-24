@@ -18,7 +18,7 @@
 from flask import Blueprint, jsonify, current_app, request
 from flask.blueprints import BlueprintSetupState
 from flask_login import LoginManager, login_required, current_user
-from .db import User, PointOfInterest
+from .db import User, PointOfInterest, RenderStyle
 import base64
 from MCcoordstore import db
 from flask_restless import APIManager, ProcessingException
@@ -64,3 +64,8 @@ def setup_api(app, db):
     manager.create_api(User, methods=["GET"],
                        exclude=["hashed_pw", "tags", "userid", "username"],
                        preprocessors=user_preproc)
+
+    style_preproc = {"GET_COLLECTION" : [api_auth_check],
+                     "GET_RESOURCE" : [api_auth_check]}
+    manager.create_api(RenderStyle, methods=["GET"],
+                       exclude=["styleid"], preprocessors=style_preproc)
