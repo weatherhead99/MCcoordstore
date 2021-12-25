@@ -78,4 +78,4 @@ class StyleEditForm(FlaskForm):
     symbolsize = _reqfield(IntegerRangeField, "symbol size",
                            id="symbolsize", render_kw = {"onchange" : octpl.format("symbolsize", "marker.size")})
 
-    symbolname = _reqfield(HiddenField, id="symtype")
+    symbolname = _reqfield(StringField, id="symtype")

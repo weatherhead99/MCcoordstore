@@ -23,6 +23,7 @@
 
 <script>
   function submit_check() {
+      console.log("submitting form");
       const form = document.getElementById("styleeditform");
       if(form.symbolname.value == "")
       {
@@ -109,7 +110,7 @@
 		     throw "logic error, only expected 1 point!";
 
 		 var ptidx = data.points[0].pointNumber;
-		 document.getElementById("svgitemidx").value = ptidx;
+//		 document.getElementById("svgitemidx").value = ptidx;
 		 
 		 var sym = data.points[0].data.marker.symbol[ptidx];
 		 document.getElementById("symtype").value = sym;

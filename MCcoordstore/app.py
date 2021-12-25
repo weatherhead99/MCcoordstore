@@ -154,3 +154,27 @@ def style_edit():
         flash("style updated", "flash-success")
         return render_template("style_edit.htm", form=form)
     return render_template("style_edit.htm", form=form)
+
+@app.route("/newstyle", methods=["GET","POST"])
+@login_required
+def style_create():
+    form = StyleEditForm()
+    if form.validate_on_submit():
+    
+        dctkeys = ["symbolname", "fillcolor", "linecolor", "linewidth",
+                   "symbolsize"]
+        rdrdct = {k : form.data[k] for k in dctkeys}
+        
+        style = RenderStyle(name = form.data["stylename"],
+                            style = rdrdct,
+                            user = current_user)    
+        db.session.add(style)
+        db.session.commit()
+        flash("style created", "flash-success")
+        return render_template("style_edit.htm", form=form)
+    else:
+        flash("form not validated!", "flash-error")
+    
+    
+    return render_template("style_edit.htm", form=form)
+
