@@ -2,10 +2,17 @@
 <html>
   <head>
     <script src="https://cdn.plot.ly/plotly-2.8.3.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/tinycolor/1.4.2/tinycolor.min.js"></script>
     <script src="static/scripts/plotly_render.js"></script>
   </head>
   <body>
+    <h1> Plotly render test </h1>
 
+    <h2>Plotly Plot </h2>
+    <div id="plotdiv"> </div>
+
+    <h2> Rendered SVG </h2>
+    <div id="render"> </div>
     <script>
       var rdr = new PlotlyShapeRenderer();
 
@@ -14,11 +21,14 @@
 
       rdr.replace_styles(markers, sizes);
 
-      document.body.appendChild(rdr.plotdom);
+      document.getElementById("plotdiv").appendChild(rdr.plotdom);
 
-      rdr.render_svg();
+      const newitem = rdr.render_one_svg(1);
+      svg_centred_render_helper(newitem, document.getElementById("render"), -1);
+      
+     
       
     </script>
-    <h1> Plotly render test </h1>
+
   </body>
 </html>
