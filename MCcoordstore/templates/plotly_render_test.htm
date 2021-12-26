@@ -1,0 +1,24 @@
+<!DOCTYPE html>
+<html>
+  <head>
+    <script src="https://cdn.plot.ly/plotly-2.8.3.min.js"></script>
+    <script src="static/scripts/plotly_render.js"></script>
+  </head>
+  <body>
+
+    <script>
+      var rdr = new PlotlyShapeRenderer();
+
+      const markers = ["diamond-cross", "octagon"];
+      const sizes = [20, 40];
+
+      rdr.replace_styles(markers, sizes);
+
+      document.body.appendChild(rdr.plotdom);
+
+      rdr.render_svg();
+      
+    </script>
+    <h1> Plotly render test </h1>
+  </body>
+</html>

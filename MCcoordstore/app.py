@@ -155,15 +155,23 @@ def style_edit():
         return render_template("style_edit.htm", form=form)
     return render_template("style_edit.htm", form=form)
 
+@app.route("/rendertest")
+def render_test():
+    return render_template("plotly_render_test.htm")
+
 @app.route("/newstyle", methods=["GET","POST"])
 @login_required
 def style_create():
     form = StyleEditForm()
     if form.validate_on_submit():
     
-        dctkeys = ["symbolname", "fillcolor", "linecolor", "linewidth",
-                   "symbolsize"]
-        rdrdct = {k : form.data[k] for k in dctkeys}
+        mapping = {"symbolname" : "marker.symbol",
+                   "fillcolor" : "marker.color",
+                   "linecolor" : "marker.line.color",
+                   "linewidth" : "marker.line.width",
+                   "symbolsize" : "marker.size"}
+        
+        rdrdct = {v : form.data[k] for k,v in mapping.items()}
         
         style = RenderStyle(name = form.data["stylename"],
                             style = rdrdct,

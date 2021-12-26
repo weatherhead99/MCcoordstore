@@ -103,8 +103,6 @@ class User(UserMixin, db.Model):
 
 
 
-
-
 class RenderStyle(db.Model):
     __tablename__ = "renderstyle"
     styleid = db.Column(db.Integer, primary_key = True)
@@ -112,7 +110,8 @@ class RenderStyle(db.Model):
     style = db.Column(db.PickleType)
     userid = db.Column(db.Integer, db.ForeignKey("user.userid"))
     user = db.relationship("User", backref=db.backref("styles"), foreign_keys=[userid])
-
+    styleversion = db.Column(db.Integer,  default=1)
+    
 
 class CoordType(enum.IntEnum):
     OVERWORLD = 1,
