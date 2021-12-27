@@ -138,7 +138,6 @@ class PlotlyCoordMapRenderer
 		update[[key]] = [[idx]];
 	    });
 
-	console.log(update);
 	Plotly.extendTraces(this._plotdom, update, [0]);
 	
     }

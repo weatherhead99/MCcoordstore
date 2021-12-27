@@ -15,7 +15,10 @@
 	  row.remove();
   };  
 
+  const styles_to_render = new Map();
+  
   function fillPOItable(jsondata) {
+      styles_to_render.clear();
       var table = document.getElementById("list_of_pois");
       var myuserid = document.getElementById("current_user_id").innerHTML;
       for(item of jsondata["data"])
@@ -40,18 +43,22 @@
 	  typecell.innerHTML = item["attributes"]["typename"];
 
 	  var stylecell = row.insertCell(-1);
-	  var stylename = lookupRelationship(item, jsondata, "style", "name");
+	  var stylename = lookupRelationship(item, jsondata, "style",
+	  "name");
 	  stylecell.innerHTML = stylename;
 
-	  const stylepreview = row.insertCell(-1);
-	  const stylepreviewdiv = document.createElement("div");
-	  stylepreviewdiv.setAttribute("class", "stylepreview");
-	  stylepreviewdiv.setAttribute("id",
-				       item["relationships"]["style"]["data"]["id"]);
-	  stylepreview.appendChild(stylepreviewdiv);
+	  var  stylepreview = row.insertCell(-1);
+	  stylepreview.setAttribute("class", "stylepreview");
+	  const styleid = item["relationships"]["style"]["data"]["id"];
+	  const  idstr = "renderpoi" + item["id"] + "style" + styleid;
+	  stylepreview.setAttribute("id",idstr);
+
+	  if (!styles_to_render.has(Number(styleid)))
+	      styles_to_render.set(Number(styleid),  new Array());
+	  styles_to_render.get(Number(styleid)).push(stylepreview);
 	  
 	  var usercell = row.insertCell(-1);
-	  var userdisplay = lookupUserDisplayName(item, jsondata);
+	  var userdisplay = lookupRelationship(item, jsondata, "user", "displayname");
 	  
 	  usercell.innerHTML = userdisplay;
 
@@ -73,18 +80,16 @@
   };
 
 
-
-  function lookupUserDisplayName(poiitem, jsondata)
-  {
-      return lookupRelationship(poiitem, jsondata, "user", "displayname");
-  }
-
   function lookupRelationship(poiitem, jsondata, relname, attrname=null)
   {
       var relid = poiitem["relationships"][relname]["data"]["id"];
-      var flt = jsondata["included"].filter( x=> x["id"] == relid);
+      var reltype = poiitem["relationships"][relname]["data"]["type"];
+      var flt = jsondata["included"].filter( x=> (x["id"] == relid && x["type"]
+						  == reltype));
       if(flt.length > 1)
 	  throw "logic error: multiple duplicate relationships found";
+      if(flt.length == 0)
+	  throw "logic error: no results found!";
       if(attrname != null)
 	  return flt[0]["attributes"][attrname];
       else
@@ -100,10 +105,6 @@
 	  const x = Number(attrs["coords"][0]);
 	  const z = Number(attrs["coords"][2]);
 
-	  const update = { x : [[x]],
-			   y : [[z]],
-			   text : [[txt]]};
-
 	  const style = lookupRelationship(item, jsondata, "style","style");
 	  console.log(style);
 	  
@@ -117,9 +118,38 @@
       };
   };
 
+  const rdr = new PlotlyShapeRenderer();
+  function render_all_styles(styledata)
+  {
+      const sizes = Array.from(styledata.values()).map(x => x["marker.size"]);
+      const symbols = Array.from(styledata.values()).map(x =>
+	  x["marker.symbol"]);
+      const styleids = Array.from(styledata.keys());
+      console.log("sizes");
+      console.log(sizes);
+      console.log(symbols);
+
+      console.log(styleids);
+      rdr.replace_styles(symbols, sizes);
+
+      var i =0;
+      for(const [id,targets] of styles_to_render.entries())
+      {
+	  const pos = styleids.indexOf(id);
+	  if(pos == -1)
+	      throw "logic error: style id not found!";
+	  var path = rdr.render_one_svg(pos);
+	  for( const tgt of targets)
+	  {
+	      var thispath = path.cloneNode();
+	      svg_centred_render_helper(thispath, tgt, -1);
+	  }
+      }
+      
+  }
   
   var ordermap =  new Map();
-  
+  const style_data = new Map();
   async function fetch_pois(sortkey=null) {
       options = {method: "GET",
 		 headers: {"Accept": "application/vnd.api+json"},
@@ -150,7 +180,6 @@
       netherplot.clearPlot();
       overworldplot.clearPlot();
 
-
       clearPOItable();
       for(;;)
       {
@@ -159,12 +188,23 @@
 	  fillPOItable(rjson);
 	  plotpoints(rjson);
 
+	  for(item of rjson["included"].filter(x=>x["type"]=="style"))
+	  {
+	      const styleid = Number(item["id"]);
+	      if( ! style_data.has(styleid))
+	      {
+		  const stylestyle = item["attributes"]["style"];
+		  style_data.set(styleid, stylestyle)
+	      }
+	  }
+	  
 	  if(rjson["links"]["next"] == null)
-	      break;
-
-	
+	      break;	
 	  url = rjson["links"]["next"];
-      }   
+      }
+
+      render_all_styles(style_data);
+
   }
 
   
