@@ -21,8 +21,6 @@
 
       rdr.replace_styles(markers, sizes);
 
-      document.getElementById("plotdiv").appendChild(rdr.plotdom);
-
       const newitem = rdr.render_one_svg(1);
       svg_centred_render_helper(newitem, document.getElementById("render"), -1);
       

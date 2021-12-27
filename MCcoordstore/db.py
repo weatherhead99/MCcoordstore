@@ -111,6 +111,7 @@ class RenderStyle(db.Model):
     userid = db.Column(db.Integer, db.ForeignKey("user.userid"))
     user = db.relationship("User", backref=db.backref("styles"), foreign_keys=[userid])
     styleversion = db.Column(db.Integer,  default=1)
+    is_removable = db.Column(db.Boolean, default=True)
     
 
 class CoordType(enum.IntEnum):
@@ -140,8 +141,9 @@ class PointOfInterest(db.Model):
 
     userid = db.Column(db.Integer, db.ForeignKey("user.userid"), nullable=False)
     user = db.relationship("User", backref=db.backref("pois"))
-    style = db.Column(db.Integer, db.ForeignKey("renderstyle.styleid"))
-
+    styleid = db.Column(db.Integer, db.ForeignKey("renderstyle.styleid"))
+    style = db.relationship("RenderStyle")
+    
     coord_x = db.Column(db.Integer)
     coord_y = db.Column(db.Integer)
     coord_z = db.Column(db.Integer)
@@ -193,6 +195,11 @@ def get_db(app):
     db.init_app(app)
     return db
 
+DEFAULT_STYLE = {"marker.symbol" : "circle",
+                 "marker.size" : 10,
+                 "marker.color" : "#3584E4",
+                 "marker.line.width" : 0,
+                 "marker.line.color" : "#000000"}
 
 def create_db(admin_pass, db):
     db_path = db.engine.url
@@ -206,6 +213,12 @@ def create_db(admin_pass, db):
 
     db.session.add(admin_user)
     db.session.add(guest_user)
+
+
+    print("creating default render style")
+    default_style = RenderStyle(name="default", style=DEFAULT_STYLE,
+                                user=admin_user, is_removable=False)
+    db.session.add(default_style)
     db.session.commit()
     
 

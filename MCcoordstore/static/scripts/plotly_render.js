@@ -4,8 +4,9 @@ class PlotlyShapeRenderer {
     constructor() {
 	this._plotdom = document.createElement('div');
 
-	Plotly.newPlot(this._plotdom, [{x : [0], y : [0]}]);
+	this._plotobj = null;
 	this._n_items = 0;
+
     }
 
     replace_styles(markernames, sizes)
@@ -20,8 +21,31 @@ class PlotlyShapeRenderer {
 			 "marker.size" : [sizes],
 			 "marker.symbol" : [markernames]
 		       };
+	if(this._plotobj == null)
+	{
+	    const data = {x : xarr,
+			  y : yarr,
+			  type: "scatter",
+			  mode : "markers",
+			  marker : {size : sizes,
+				    symbol: markernames}
+			  };
+	    console.log("plotobj is null, new plot creating");
+	    this._plotobj = Plotly.newPlot(this._plotdom, [data]);
+	}
+	else
+	{
+	    	const update = { x : [xarr],
+			 y : [yarr],
+			 type : "scatter",
+			 mode : "markers",
+			 "marker.size" : [sizes],
+			 "marker.symbol" : [markernames]
+		       };
+	    Plotly.restyle(this._plotdom, update, 0);
+	}
 
-	Plotly.restyle(this._plotdom, update, 0);
+	this._n_items += markernames.length;
 	
     }
 
@@ -72,3 +96,58 @@ function svg_centred_render_helper(pathitem, target,  width, applyscale=null)
 
     attacheditem.setAttributeNS(null, "transform",translatestr);
 }
+
+class PlotlyCoordMapRenderer
+{
+    constructor(title, width, plotdom)
+    {
+	this._layout = {autosize : true,
+			automargin : true,
+			title : title,
+			xaxis : {title : "X"},
+			yaxis : {title : "Z"},
+			width : width};
+	
+	this._data = { x : [],
+		       y : [],
+		       text : [],
+		       mode: "markers",
+		       type: "scatter",
+		       marker : {symbol : [],
+				 size : [],
+				 color : [],
+				 line : {width : [],
+					 color : []}}};
+
+	this._config = {responsive : true,
+			modeBarButtonsToRemove : ["select2d", "lasso2d"],
+			scrollZoom : true};
+	
+	this._plotdom = plotdom;
+	Plotly.newPlot(this._plotdom, [this._data], this._layout, this._config);
+    }
+
+    plotPoint(x, y, txt, style)
+    {
+	const update = { x : [[x]],
+			 y : [[y]],
+			 text : [[txt]]};
+
+	Object.entries(style).map(
+	    function ([key,idx]) {
+		update[[key]] = [[idx]];
+	    });
+
+	console.log(update);
+	Plotly.extendTraces(this._plotdom, update, [0]);
+	
+    }
+
+    clearPlot()
+    {
+	this._data.x.length = 0;
+	this._data.y.length = 0;
+    }
+
+
+};

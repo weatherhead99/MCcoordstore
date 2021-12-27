@@ -4,7 +4,7 @@
 {% block content %}
 
 <script src="https://cdn.plot.ly/plotly-2.8.3.min.js"></script>
-
+<script src="static/scripts/plotly_render.js"></script>
 
 <script>
   
@@ -39,6 +39,17 @@
 	  var typecell = row.insertCell(-1);
 	  typecell.innerHTML = item["attributes"]["typename"];
 
+	  var stylecell = row.insertCell(-1);
+	  var stylename = lookupRelationship(item, jsondata, "style", "name");
+	  stylecell.innerHTML = stylename;
+
+	  const stylepreview = row.insertCell(-1);
+	  const stylepreviewdiv = document.createElement("div");
+	  stylepreviewdiv.setAttribute("class", "stylepreview");
+	  stylepreviewdiv.setAttribute("id",
+				       item["relationships"]["style"]["data"]["id"]);
+	  stylepreview.appendChild(stylepreviewdiv);
+	  
 	  var usercell = row.insertCell(-1);
 	  var userdisplay = lookupUserDisplayName(item, jsondata);
 	  
@@ -61,79 +72,49 @@
       }
   };
 
-  var overworlddom = null;
-  var netherdom = null;
-  var overworldplot = null;
-  var netherplot = null;
-  
-  var overworldplotdata = { x : [],
-			    y : [],
-			    text : [],
-			    mode: "markers",
-			    type: "scatter"};
-  var overworldlayout = {
-      autosize : true,
-      automargin: true,
-      title: "Overworld",
-      xaxis : { title : "X"},
-      yaxis : { title : "Z"},
-      width: "50%"
-  };
-  
-  var netherplotdata = { x : [],
-			 y : [],
-			 text : [],
-			 mode: "markers",
-			 type: "scatter"};
 
-  var netherlayout = {
-      autosize : true,
-      automargin : true,
-      title: "The Nether",
-      xaxis : { title : "X"},
-      yaxis : { title : "Z"},
-      width : "50%"
-  };
-
-  var plotconfig = {
-      responsive : true,
-      modeBarButtonsToRemove : ["select2d", "lasso2d"],
-      scrollZoom : true
-  };
 
   function lookupUserDisplayName(poiitem, jsondata)
   {
-      var userid = poiitem["relationships"]["user"]["data"]["id"];
-      var flt = jsondata["included"].filter(x => x["id"] == userid);
-      if(flt.length > 1)
-	  throw "logic error: multiple duplicate users found!";
-      return flt[0]["attributes"]["displayname"];
+      return lookupRelationship(poiitem, jsondata, "user", "displayname");
   }
-  
+
+  function lookupRelationship(poiitem, jsondata, relname, attrname=null)
+  {
+      var relid = poiitem["relationships"][relname]["data"]["id"];
+      var flt = jsondata["included"].filter( x=> x["id"] == relid);
+      if(flt.length > 1)
+	  throw "logic error: multiple duplicate relationships found";
+      if(attrname != null)
+	  return flt[0]["attributes"][attrname];
+      else
+	  return flt[0]["attributes"];
+  }      
+
   function plotpoints(jsondata)
   {
       for(item of jsondata["data"])
       {
 	  var attrs = item["attributes"];
 	  var txt = attrs["name"];
+	  const x = Number(attrs["coords"][0]);
+	  const z = Number(attrs["coords"][2]);
+
+	  const update = { x : [[x]],
+			   y : [[z]],
+			   text : [[txt]]};
+
+	  const style = lookupRelationship(item, jsondata, "style","style");
+	  console.log(style);
+	  
 	  if(attrs["coordtype"] =="OVERWORLD")
-	  {
-	      Plotly.extendTraces(overworlddom, {x : [[attrs["coords"][0]]],
-						 y : [[attrs["coords"][2]]],
-						 text: [[txt]]}, [0]);
-	  }
+	      overworldplot.plotPoint(x,z, txt, style);
 	  else if( item["attributes"]["coordtype"] == "NETHER")
-	  {
-	      Plotly.extendTraces(netherdom, {x  : [[attrs["coords"][0]]],
-					      y : [[attrs["coords"][2]]],
-					      text: [[txt]]}, [0]);
-	  }
+	      netherplot.plotPoint(x,z,txt, style);
 	  else
 	  {
 	  }
-
       };
-
   };
 
   
@@ -144,8 +125,9 @@
 		 headers: {"Accept": "application/vnd.api+json"},
 		 credentials: "same-origin"};
       url = new URL("/api/poi", document.URL)
-      params = [["page[number]", "1"], ["include", "user"],
-		["fields[user]", "displayname"]];
+      params = [["page[number]", "1"], ["include", "user,style"],
+		["fields[user]", "displayname"],
+		["fields[style]", "name,style"]];
       if(sortkey != null)
       {
 	  if( !(sortkey  in ordermap))
@@ -165,10 +147,8 @@
       }
       url.search = new URLSearchParams(params).toString();
 
-      netherplotdata.x.length = 0;
-      netherplotdata.y.length = 0;
-      overworldplotdata.x.length = 0;
-      overworldplotdata.y.length = 0;
+      netherplot.clearPlot();
+      overworldplot.clearPlot();
 
 
       clearPOItable();
@@ -206,9 +186,8 @@
   overworlddom = document.getElementById("poi-overworldgraph");
   netherdom = document.getElementById("poi-nethergraph");
 
-  Plotly.newPlot(overworlddom, [overworldplotdata], overworldlayout, plotconfig);
-  Plotly.newPlot(netherdom, [netherplotdata], netherlayout, plotconfig);
-  
+  const netherplot = new PlotlyCoordMapRenderer("The Nether", "50%", netherdom);
+  const overworldplot = new PlotlyCoordMapRenderer("Overworld", "50%", overworlddom);
 </script>
 
 {% if current_user.is_authenticated %}
@@ -236,6 +215,8 @@
   <th onclick="fetch_pois('coord_y')">Y</th>
   <th onclick="fetch_pois('coord_z')">Z</th>
   <th onclick="fetch_pois('coordtype')">type</th>
+  <th onclick="fetch_pois('style.name')">style name </th>
+  <th>style preview</th>
   <th onclick="fetch_pois('user.displayname')">created by</th>
   <th onclick="fetch_pois('create_date')">created at</th>
 </table>

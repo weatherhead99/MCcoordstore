@@ -18,7 +18,7 @@
 # along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
 
-from flask import render_template, redirect, flash
+from flask import render_template, redirect, flash, request
 from markupsafe import Markup
 from werkzeug.security import check_password_hash
 from flask_login import login_required, current_user, login_user, logout_user
@@ -32,6 +32,11 @@ from .utils import serialize_pois
 app = create_app()
 db = get_db(app)
 
+def get_default_style(db):
+    stmt = db.select(RenderStyle).where(RenderStyle.name == "default")
+    results = db.session.execute(stmt)
+    return results.scalars().one()
+
 
 
 @app.route("/", methods=["POST", "GET"])
@@ -42,6 +47,8 @@ def index():
         poi = PointOfInterest(name=form.data["name"], public=form.data["public"], user=current_user,
                               coordtype=form.data["coordtp"])
         poi.coords = form.coords
+        style = get_default_style(db)
+        poi.style = style
         
         db.session.add(poi)
         db.session.commit()
@@ -62,6 +69,9 @@ def add_manual():
         print("coordtp: %s" % form.data["coordtp"])
         print("coordtp tp : %s" % str(type(form.data["coordtp"])))
         poi.coords = form.coords
+        default_style = get_default_style(db)
+
+        poi.style = default_style
         db.session.add(poi)
         db.session.commit()
         return redirect("/")
@@ -180,7 +190,7 @@ def style_create():
         db.session.commit()
         flash("style created", "flash-success")
         return render_template("style_edit.htm", form=form)
-    else:
+    elif request.method=="POST":
         flash("form not validated!", "flash-error")
     
     

@@ -67,5 +67,5 @@ def setup_api(app, db):
 
     style_preproc = {"GET_COLLECTION" : [api_auth_check],
                      "GET_RESOURCE" : [api_auth_check]}
-    manager.create_api(RenderStyle, methods=["GET"],
+    manager.create_api(RenderStyle, methods=["GET"], collection_name="style",
                        exclude=["styleid"], preprocessors=style_preproc)
