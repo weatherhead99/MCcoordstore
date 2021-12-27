@@ -66,9 +66,9 @@ class User(UserMixin, db.Model):
     is_admin = db.Column(db.Boolean, default=False)
     
     alternate_id = db.Column(db.Integer, unique=True, nullable=False, server_default=_server_random_sqlite_range())
-    default_styleid = db.Column(db.Integer, db.ForeignKey("renderstyle.styleid"), nullable=True)
+    default_styleid = db.Column(db.Integer, db.ForeignKey("renderstyle.styleid", use_alter=True), nullable=True)
     default_style = db.relationship("RenderStyle", foreign_keys=[default_styleid])
-    
+   
     
     @classmethod
     def create_new_user(cls, username: str, displayname: str, password: str) -> "User":

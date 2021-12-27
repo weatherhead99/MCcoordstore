@@ -95,6 +95,7 @@ function svg_centred_render_helper(pathitem, target,  width, applyscale=null)
     translatestr += " translate(" + width/2 + "," + width/2 + ")";
 
     attacheditem.setAttributeNS(null, "transform",translatestr);
+    return item;
 }
 
 class PlotlyCoordMapRenderer
