@@ -1,4 +1,14 @@
 const SVGNS = "http://www.w3.org/2000/svg";
+const DEFAULT_DATA =  { x : [],
+			y : [],
+			text : [],
+			mode: "markers",
+			type: "scatter",
+			marker : {symbol : [],
+				  size : [],
+				  color : [],
+				  line : {width : [],
+					  color : []}}};
 
 class PlotlyShapeRenderer {
     constructor() {
@@ -108,17 +118,9 @@ class PlotlyCoordMapRenderer
 			xaxis : {title : "X"},
 			yaxis : {title : "Z"},
 			width : width};
-	
-	this._data = { x : [],
-		       y : [],
-		       text : [],
-		       mode: "markers",
-		       type: "scatter",
-		       marker : {symbol : [],
-				 size : [],
-				 color : [],
-				 line : {width : [],
-					 color : []}}};
+
+	//need a deep copy of the default data 
+	this._data = JSON.parse(JSON.stringify(DEFAULT_DATA));
 
 	this._config = {responsive : true,
 			modeBarButtonsToRemove : ["select2d", "lasso2d"],
@@ -149,5 +151,55 @@ class PlotlyCoordMapRenderer
 	this._data.y.length = 0;
     }
 
+
+};
+
+class PlotlyStyleRenderer
+{
+    constructor(divtarget, symwidth)
+    {
+	this._divtarget = divtarget;
+	this._symwidth = symwidth;
+	this._iotarr = Array.from(Array(symwidth).keys());
+
+	this._data = JSON.parse(JSON.stringify(DEFAULT_DATA));
+	this._data.marker.size = 20;
+	this._data.marker.line.width = 5;
+	
+	this._layout = {
+	    autosize : true,
+	    xaxis : {visible: false, automargin: true},
+	    yaxis : {visible: false, automargin: true},
+	    width: "50%",
+	    margin : {
+		l : 0,
+		r : 0,
+		t : 0,
+		b : 0,
+		pad : 4}
+	    
+	};
+    }
+
+    plot_all_possible_symbols()
+    {
+	const marker = Plotly.PlotSchema.get().traces.scatter.attributes.marker;
+	const symstrings = marker.symbol.values.filter(x => typeof(x)=="string" && Number.isNaN(Number(x)) == true);
+	const nrows = Math.floor(symstrings.length / this._symwidth);
+
+	var symslice = 0;
+	for(let i =0 ; i < nrows -1; i++)
+	{
+	    this._data.x.push(...this._iotarr);
+	    this._data.y.push(...Array(this._symwidth).fill(i));
+	    this._data.marker.symbol.push(...symstrings.slice(symslice,
+							      symslice + this._symwidth));
+	    this._data.text.push(...symstrings.slice(symslice, symslice + this._symwidth));
+	    symslice += this._symwidth;
+	}
+
+	Plotly.newPlot(this._divtarget, [this._data], this._layout)
+
+    }
 
 };

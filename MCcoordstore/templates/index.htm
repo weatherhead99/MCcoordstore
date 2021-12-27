@@ -18,7 +18,6 @@
   const styles_to_render = new Map();
   
   function fillPOItable(jsondata) {
-      styles_to_render.clear();
       var table = document.getElementById("list_of_pois");
       var myuserid = document.getElementById("current_user_id").innerHTML;
       for(item of jsondata["data"])
@@ -106,7 +105,7 @@
 	  const z = Number(attrs["coords"][2]);
 
 	  const style = lookupRelationship(item, jsondata, "style","style");
-	  console.log(style);
+
 	  
 	  if(attrs["coordtype"] =="OVERWORLD")
 	      overworldplot.plotPoint(x,z, txt, style);
@@ -125,7 +124,6 @@
       const symbols = Array.from(styledata.values()).map(x =>
 	  x["marker.symbol"]);
       const styleids = Array.from(styledata.keys());
-      console.log("sizes");
       rdr.replace_styles(symbols, sizes);
 
       var i =0;
@@ -136,7 +134,6 @@
 	      throw "logic error: style id not found!";
 	  var path = rdr.render_one_svg(pos);
 	  var sd = styledata.get(id);
-	  console.log(sd);
 	  
 	  path.setAttributeNS(null, "fill", sd["marker.color"]);
 	  path.setAttributeNS(null, "stroke", sd["marker.line.color"]);
@@ -155,6 +152,7 @@
   var ordermap =  new Map();
   const style_data = new Map();
   async function fetch_pois(sortkey=null) {
+      styles_to_render.clear();
       options = {method: "GET",
 		 headers: {"Accept": "application/vnd.api+json"},
 		 credentials: "same-origin"};
