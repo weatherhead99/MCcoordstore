@@ -19,44 +19,108 @@ class PlotlyShapeRenderer {
 
     }
 
-    replace_styles(markernames, sizes)
+    get_plot_data(markernames, sizes)
     {
-	const xarr = Array.from(Array(markernames.length).keys());
-	const yarr = Array(markernames.length).fill(1);
+	const data = { type : "scatter",
+		       mode : "markers" };
 
-	const update = { x : [xarr],
-			 y : [yarr],
-			 type : "scatter",
-			 mode : "markers",
-			 "marker.size" : [sizes],
-			 "marker.symbol" : [markernames]
-		       };
+	if(sizes.hasOwnProperty("length"))
+	{
+	    console.log("array marker names");
+	    console.log(markernames);
+	    const xarr = Array.from(Array(markernames.length).keys()).map(x=> x+this._n_items);
+	    const yarr = Array(markernames.length).fill(1);
+	    data["x"] = xarr;
+	    data["y"] = yarr;
+
+	    data["marker"] = { symbol : markernames,
+			       size : sizes};
+	    
+	}
+	else
+	{
+	    data["x"] = [this._n_items];
+	    data["y"] = [1];
+	    data["marker"] = { symbol : [markernames],
+			       size : [sizes]};
+	}
+
+	return data;
+    }
+
+    get_plot_update(markernames, sizes)
+    {
+	if(sizes.hasOwnProperty("length"))
+	{
+	    const xarr = Array.from(Array(markernames.length).keys()).map(x=> x+this._n_items);
+	    const yarr = Array(markernames.length).fill(1);
+	    return { x : [xarr],
+		     y : [yarr],
+		     "marker.size" : [sizes],
+		     "marker.symbol" : [markernames]};
+	    
+	}
+
+	else
+	{
+	    console.log("single item");
+	    return { x : [[this._n_items]],
+		     y : [[1]],
+		     "marker.size" : [[sizes]],
+		     "marker.symbol" : [[markernames]]}
+	}
+	
+    }
+
+    update_idxs(newitems)
+    {
+	if(newitems.hasOwnProperty("length"))
+	{
+	    const idxstart = this._n_items;
+	    const idxs = Array.from(Array(newitems.length).keys()).map(x=> x+ idxstart);
+	    this._n_items += newitems.length;
+	    return idxs;
+	}
+
+	const idx = this._n_items;
+	this._n_items += 1;
+	return idx;
+
+    }
+
+    _style_logic(markernames, sizes, fun)
+    {
 	if(this._plotobj == null)
 	{
-	    const data = {x : xarr,
-			  y : yarr,
-			  type: "scatter",
-			  mode : "markers",
-			  marker : {size : sizes,
-				    symbol: markernames}
-			  };
-	    console.log("plotobj is null, new plot creating");
+	    console.log("null plotobj");
+	    const data = this.get_plot_data(markernames, sizes);
 	    this._plotobj = Plotly.newPlot(this._plotdom, [data]);
 	}
 	else
 	{
-	    	const update = { x : [xarr],
-			 y : [yarr],
-			 type : "scatter",
-			 mode : "markers",
-			 "marker.size" : [sizes],
-			 "marker.symbol" : [markernames]
-		       };
-	    Plotly.restyle(this._plotdom, update, 0);
+	    console.log("already existing plotobj");
+	    const update = this.get_plot_update(markernames, sizes);
+	    fun(this._plotdom, update);
 	}
 
-	this._n_items += markernames.length;
-	
+	return this.update_idxs(sizes);
+    }
+    
+    add_style(markername, size)
+    {
+	const fun = function(dom, data) {
+	    Plotly.extendTraces(dom, data, [0]);
+	};
+	return this._style_logic(markername, size, fun);
+    }
+    
+    replace_styles(markernames, sizes)
+    {
+	this._n_items = 0;
+    	const fun = function(dom, data)  {
+	    Plotly.restyle(dom, data, 0);
+	};
+	return this._style_logic(markernames, sizes, fun);
     }
 
     render_one_svg(idx) {
@@ -72,6 +136,15 @@ class PlotlyShapeRenderer {
     get plotdom() { return this._plotdom;}
     get renderdom() { return this._renderdom;}
 };
+
+function svg_style_helper(pathitem, styledata)
+{
+    pathitem.setAttributeNS(null, "fill", styledata["marker.color"]);
+    pathitem.setAttributeNS(null, "stroke", styledata["marker.line.color"]);
+    pathitem.setAttributeNS(null, "opacity", "0.7");
+    pathitem.setAttributeNS(null, "stroke-width", styledata["marker.line.width"]);
+
+}
 
 function svg_centred_render_helper(pathitem, target,  width, applyscale=null)
 {

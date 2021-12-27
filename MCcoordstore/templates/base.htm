@@ -20,7 +20,12 @@
 <html>
   <title>Minecraft Points of Interest</title>
   <head>
-    <link rel="stylesheet" type="text/css" href="{{ url_for('static', filename='styles/style.css') }}">
+    <link rel="stylesheet" type="text/css" href="{{ url_for('static',
+						 filename='styles/style.css')
+						 }}">
+
+    {% block headblock %}
+    {% endblock %}
   </head>
   <body>
     <!--navigation bar -->

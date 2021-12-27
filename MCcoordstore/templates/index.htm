@@ -1,10 +1,14 @@
 {% extends "base.htm" %}
 
-
-{% block content %}
+{% block headblock %}
 
 <script src="https://cdn.plot.ly/plotly-2.8.3.min.js"></script>
 <script src="static/scripts/plotly_render.js"></script>
+
+{% endblock %}
+
+
+{% block content %}
 
 <script>
   
@@ -133,12 +137,7 @@
 	  if(pos == -1)
 	      throw "logic error: style id not found!";
 	  var path = rdr.render_one_svg(pos);
-	  var sd = styledata.get(id);
-	  
-	  path.setAttributeNS(null, "fill", sd["marker.color"]);
-	  path.setAttributeNS(null, "stroke", sd["marker.line.color"]);
-	  path.setAttributeNS(null,"opacity" , "0.7");
-	  path.setAttributeNS(null, "stroke-width", sd["marker.line.width"]);
+	  svg_style_helper(path, styledata.get(id));
 	  
 	  for( const tgt of targets)
 	  {

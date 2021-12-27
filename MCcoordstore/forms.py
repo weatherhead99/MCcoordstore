@@ -30,7 +30,7 @@ from wtforms.fields import  HiddenField, IntegerRangeField
 from wtforms.validators import DataRequired, EqualTo
 from wtforms.widgets import ColorInput
 from markupsafe import Markup
-from .db import CoordType, POI_NAME_LOOKUP
+from .db import CoordType, POI_NAME_LOOKUP, RenderStyle
 
 def _reqfield(func, *args, **kwargs):
     return func(*args, **kwargs, validators=[DataRequired()])
@@ -45,11 +45,20 @@ class AddPOIForm(FlaskForm):
     
     coordtp = _reqfield(SelectField, "type", choices=typechoice)
     public = BooleanField("public")
+
+    style = _reqfield(SelectField, "style", id="styleselectfield", coerce=int)
     
     @property
     def coords(self):
         return (self.data["x"], self.data["y"], self.data["z"])
-    
+
+    def load_style_choices(self, db):
+        stmt = db.select(RenderStyle)
+        choices = []
+        for style in db.session.execute(stmt).scalars():
+            choices.append((style.styleid, style.name))
+        self.style.choices = choices
+
 
 class SignupForm(FlaskForm):
     username = _reqfield(StringField, "username")

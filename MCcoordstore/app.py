@@ -61,6 +61,7 @@ def index():
 @login_required
 def add_manual():
     form = AddPOIForm()
+    form.load_style_choices(db)
     if form.validate_on_submit():
         #TODO: user guest only for now
         poi = PointOfInterest(name=form.data["name"], public=form.data["public"], user=current_user,
@@ -69,14 +70,14 @@ def add_manual():
         print("coordtp: %s" % form.data["coordtp"])
         print("coordtp tp : %s" % str(type(form.data["coordtp"])))
         poi.coords = form.coords
-        default_style = get_default_style(db)
-
-        poi.style = default_style
+        poi.styleid = form.data["style"]
         db.session.add(poi)
         db.session.commit()
         return redirect("/")
 
     return render_template("add_manual.htm", form=form)
+
+
 
 @app.route("/signup", methods=["POST","GET"])
 def signup():
