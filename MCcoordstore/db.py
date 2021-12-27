@@ -110,7 +110,7 @@ class RenderStyle(db.Model):
     style = db.Column(db.PickleType)
     userid = db.Column(db.Integer, db.ForeignKey("user.userid"))
     user = db.relationship("User", backref=db.backref("styles"), foreign_keys=[userid])
-    styleversion = db.Column(db.Integer,  default=1)
+    styleversion = db.Column(db.Integer,  default=1, nullable=False, server_default=1))
     is_removable = db.Column(db.Boolean, default=True)
     
 

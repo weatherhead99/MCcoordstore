@@ -7,6 +7,8 @@ Create Date: 2021-12-27 19:00:54.558994
 """
 from alembic import op
 import sqlalchemy as sa
+from MCcoordstore.db import User, RenderStyle, DEFAULT_STYLE
+from sqlalchemy.orm import Session
 
 
 # revision identifiers, used by Alembic.
@@ -26,10 +28,22 @@ def upgrade():
 
     with op.batch_alter_table('renderstyle', schema=None) as batch_op:
         batch_op.add_column(sa.Column('userid', sa.Integer(), nullable=True))
-        batch_op.add_column(sa.Column('styleversion', sa.Integer(), nullable=True))
+        batch_op.add_column(sa.Column('styleversion', sa.Integer(), nullable=False, server_default=1))
         batch_op.add_column(sa.Column('is_removable', sa.Boolean(), nullable=True))
         batch_op.create_foreign_key(batch_op.f('fk_renderstyle_userid_user'), 'user', ['userid'], ['userid'])
 
+    stmt = db.select(User).where(User.username == "admin")
+    conn = op.get_bind()
+    session = Session(bind=conn)
+
+    admin_user = session.execute(stmt).scalars().one()
+    default_style = RenderStyle(name="default", style=DEFAULT_STYLE,
+                                user=admin_user, is_removable=False)
+    session.add(default_style)
+    session.commit()
+    
+    
+    
     with op.batch_alter_table('user', schema=None) as batch_op:
         batch_op.add_column(sa.Column('default_styleid', sa.Integer(), nullable=True))
         batch_op.create_foreign_key(batch_op.f('fk_user_default_styleid_renderstyle'), 'renderstyle', ['default_styleid'], ['styleid'], use_alter=True)
