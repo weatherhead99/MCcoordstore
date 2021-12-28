@@ -21,7 +21,7 @@
 
 {% block headblock %}
 <script src="https://cdn.plot.ly/plotly-2.8.3.min.js"></script>
-<script src="static/scripts/plotly_render.js"></script>
+<script src="/static/scripts/plotly_render.js"></script>
 
 {% endblock %}
 
@@ -76,7 +76,8 @@
 
       const tgt = document.getElementById("stylepreview");
       tgt.innerHTML = "";
-      const svgitem = svg_centred_render_helper(styledata.svgpath, tgt, -1);
+      const svgitem = svg_centred_render_helper(styledata.svgpath, tgt, -1,
+      null, 10);
       
   }
 

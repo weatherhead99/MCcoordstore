@@ -78,6 +78,28 @@ def add_manual():
 
     return render_template("add_manual.htm", form=form)
 
+@app.route("/editpoi/<int:poiid>", methods=["POST","GET"])
+@login_required
+def edit_poi(poiid: int):
+    stmt = db.select(PointOfInterest).filter(PointOfInterest.poiid == poiid)
+    poi = db.session.execute(stmt).scalars().one()
+
+    if not poi.user == current_user:
+        flash("you do not have permission to edit this POI", "flash-error")
+        return redirect("/")
+    
+    form = AddPOIForm()
+    form.load_style_choices(db)
+
+    if form.validate_on_submit():
+        form.update_object(poi)
+        db.session.commit()
+        flash("POI edited", "flash-success")
+        return redirect("/")
+    else:
+        form.prefill(poi)
+    return render_template("add_manual.htm", form=form)
+
 
 
 @app.route("/signup", methods=["POST","GET"])

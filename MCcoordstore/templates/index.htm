@@ -32,15 +32,9 @@
 	  var namecell = row.insertCell(-1);
 	  namecell.innerHTML = attrs["name"];
 
-	  var xcell = row.insertCell(-1);
-	  xcell.innerHTML = attrs["coords"][0];
-
-	  var ycell = row.insertCell(-1);
-	  ycell.innerHTML = attrs["coords"][1];
-
-	  var zcell = row.insertCell(-1);
-	  zcell.innerHTML = attrs["coords"][2];
-
+	  for(let i=0; i<3; i++)
+	      row.insertCell(-1).innerHTML = attrs["coords"][i];
+	  
 	  //TODO: do this lookup on client side, probably
 	  var typecell = row.insertCell(-1);
 	  typecell.innerHTML = attrs["typename"];
@@ -71,11 +65,17 @@
 
 	  if(Number(item["relationships"]["user"]["data"]["id"]) == Number(myuserid))
 	  {
-	      var deletecell = row.insertCell(-1);
 	      var poiid = item["id"]
+	      var editcell = row.insertCell(-1);
+	      var editlink = '<a href="/editpoi/' + poiid + '">edit</a>';
+	      editcell.innerHTML = editlink;
+	      
+	      var deletecell = row.insertCell(-1);
+
 	      var deletelink ='<a href="/poi/delete/' + poiid + '">delete</a>';
 	      deletecell.innerHTML = deletelink;
 
+	      
 	  }
 
 	  
