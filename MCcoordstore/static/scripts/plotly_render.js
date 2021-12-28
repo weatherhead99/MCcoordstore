@@ -12,11 +12,12 @@ const DEFAULT_DATA =  { x : [],
 					  color : []}}};
 
 class PlotlyShapeRenderer {
-    constructor() {
+    constructor(svg_padding = 0) {
 	this._plotdom = document.createElement('div');
 
 	this._plotobj = null;
 	this._n_items = 0;
+	this._padding = svg_padding;
 
     }
 
@@ -147,7 +148,7 @@ function svg_style_helper(pathitem, styledata)
 
 }
 
-function svg_centred_render_helper(pathitem, target,  width, applyscale=null)
+function svg_centred_render_helper(pathitem, target,  width, applyscale=null, padding=0)
 {
     const item = document.createElementNS(SVGNS, "svg");
 
@@ -166,14 +167,14 @@ function svg_centred_render_helper(pathitem, target,  width, applyscale=null)
 	item.setAttributeNS(null,"width", 10000);
 	item.setAttributeNS(null,"height", 10000);
 	const bbox = attacheditem.getBBox();
-	item.setAttributeNS(null,"width", bbox.width);
-	item.setAttributeNS(null,"height",bbox.height);
-	width = bbox.width;
+	item.setAttributeNS(null,"width", bbox.width + padding);
+	item.setAttributeNS(null,"height",bbox.height + padding);
+	width = bbox.width + padding;
     }
     else
     {
-	item.setAttributeNS(null, "width", width);
-	item.setAttributeNS(null, "height", width);
+	item.setAttributeNS(null, "width", width + padding);
+	item.setAttributeNS(null, "height", width + padding);
     }
 
     translatestr += " translate(" + width/2 + "," + width/2 + ")";
@@ -272,8 +273,10 @@ class PlotlyStyleRenderer
 	    symslice += this._symwidth;
 	}
 
-	Plotly.newPlot(this._divtarget, [this._data], this._layout)
+	Plotly.newPlot(this._divtarget, [this._data], this._layout);
 
     }
+
+
 
 };

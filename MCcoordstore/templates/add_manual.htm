@@ -61,6 +61,7 @@
 			   credentials : "same-origin"};
 	  const response =  await fetch(url, options);
 	  const rjson = await response.json();
+	  console.log(rjson);
 	  const symbol = rjson["data"]["attributes"]["style"]["marker.symbol"];
 	  const size = Number(rjson["data"]["attributes"]["style"]["marker.size"]);
 	  const idx = rdr.add_style(symbol, size);

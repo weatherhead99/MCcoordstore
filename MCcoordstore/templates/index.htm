@@ -45,10 +45,10 @@
 	  var typecell = row.insertCell(-1);
 	  typecell.innerHTML = attrs["typename"];
 
-	  var stylecell = row.insertCell(-1);
-	  var stylename = lookupRelationship(item, jsondata, "style",
-	  "name");
-	  stylecell.innerHTML = stylename;
+	  //var stylecell = row.insertCell(-1);
+	  //var stylename = lookupRelationship(item, jsondata, "style",
+	  //"name");
+	  //stylecell.innerHTML = stylename;
 
 	  var  stylepreview = row.insertCell(-1);
 	  stylepreview.setAttribute("class", "stylepreview");
@@ -110,7 +110,6 @@
 
 	  const style = lookupRelationship(item, jsondata, "style","style");
 
-	  
 	  if(attrs["coordtype"] =="OVERWORLD")
 	      overworldplot.plotPoint(x,z, txt, style);
 	  else if( item["attributes"]["coordtype"] == "NETHER")
@@ -141,8 +140,10 @@
 	  
 	  for( const tgt of targets)
 	  {
+	      
 	      var thispath = path.cloneNode();
-	      var svgitem = svg_centred_render_helper(thispath, tgt, -1);
+	      var svgitem = svg_centred_render_helper(thispath, tgt, -1, null,
+	      10);
 	  }
       }
       
@@ -256,7 +257,7 @@
   <th onclick="fetch_pois('coord_y')">Y</th>
   <th onclick="fetch_pois('coord_z')">Z</th>
   <th onclick="fetch_pois('coordtype')">type</th>
-  <th onclick="fetch_pois('style.name')">style name </th>
+  <!--<th onclick="fetch_pois('style.name')">style name </th>-->
   <th>style preview</th>
   <th onclick="fetch_pois('user.displayname')">created by</th>
   <th onclick="fetch_pois('create_date')">created at</th>

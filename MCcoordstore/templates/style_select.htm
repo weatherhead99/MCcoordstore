@@ -1,0 +1,65 @@
+{% extends "base.htm" %}
+
+{% block headblock %}
+<script src="https://cdn.plot.ly/plotly-2.8.3.min.js"></script>
+<script src="/static/scripts/plotly_render.js"></script>
+
+{% endblock %}
+
+
+{% block content %}
+<div id="userid" style="display: none">{{ current_user.alternate_id }}</div>
+
+
+<h2> select a style by clicking on it: </h2>
+
+
+<h3>Styles that you created</h3>
+<table id="list_of_styles" class="poi_list">
+  <tr>
+    <th>Style name</th>
+    <th>Style Preview</th>
+  </tr>
+
+  {% for style in styledats %}
+  <tr class="stylerow">
+    <td><a class="stylenamelink">{{style.name}}</a></td>
+    <td class="stylepreview"></td>
+    <td style="display: none" class="styledata">{{
+      style.style|tojson|safe}}</td>
+    <td style="display: none" class="styleid"> {{ style.styleid }} </td>
+    
+  </tr>
+  {% endfor %}
+  
+</table>
+
+
+<script>
+  let plt = new PlotlyShapeRenderer();
+  const stylerows = document.querySelectorAll(".stylerow");
+
+  for(const row of stylerows)
+  {
+      let styledat = JSON.parse(row.querySelector(".styledata").innerHTML);
+      let tgt = row.querySelector(".stylepreview");
+      let linkfield = row.querySelector(".stylenamelink");
+      let idx = plt.add_style(styledat["marker.symbol"],
+			      styledat["marker.size"]);
+
+      var styleidx = Number(row.querySelector(".styleid").innerHTML);
+      let pathitem = plt.render_one_svg(idx).cloneNode();
+      svg_style_helper(pathitem, styledat);
+      let svgitem = svg_centred_render_helper(pathitem, tgt, -1, null, 10);
+
+      linkfield.href = "/styleedit/" + String(styleidx);
+      
+  }
+  
+
+</script>
+
+
+
+
+{% endblock %}

@@ -158,6 +158,16 @@ def logout():
 def dump_pois():
     return serialize_pois(app, db)
 
+@app.route("/styleedit")
+@login_required
+def style_select():
+
+    stmt = db.select(RenderStyle).filter(RenderStyle.user == current_user)
+    styles = db.session.execute(stmt).scalars()
+    
+    
+    return render_template("style_select.htm", styledats=styles)
+
 @app.route("/styleedit/<int:styleid>", methods=["GET","POST"])
 @login_required
 def style_edit(styleid: int):
@@ -169,16 +179,25 @@ def style_edit(styleid: int):
         return redirect("/")
     
     form = StyleEditForm()
-
+        
+    if form.validate_on_submit():
+        print(db.session.is_modified(style))
+        print(style.style)
+        form.update_object(style)
+        print(style.style)
+        print(db.session.is_modified(style))
+        db.session.commit()
+        
+        flash("style updated", "flash-success")
+        form.prefill(style)
+        return redirect("/styleedit")
+    
     try:
         form.prefill(style)
     except KeyError:
         print("missing key, probably not in style db data, continuing...")
-        
     
-    if form.validate_on_submit():
-        flash("style updated", "flash-success")
-        return render_template("style_edit.htm", form=form)
+    
     return render_template("style_edit.htm", form=form, datamapping=json.dumps(form.MAPPING))
 
 
@@ -189,6 +208,7 @@ def style_create():
     if form.validate_on_submit():
 
         rdrdct = form.db_json
+        print(rdrdct)
         style = RenderStyle(name = form.data["stylename"],
                             styleversion = form.STYLE_VERSION,
                             style = rdrdct,

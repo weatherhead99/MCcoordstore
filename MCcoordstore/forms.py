@@ -101,13 +101,17 @@ class StyleEditForm(FlaskForm):
 
 
     def prefill(self, style: RenderStyle):
-        print(style.style)
         self.stylename.data = style.name
 
         for k,v in self.MAPPING.items():
             getattr(self, k).data = style.style[v]
-                                          
+
+    def update_object(self, style: RenderStyle):
+        style.style = self.db_json
+        style.name = self.data["stylename"]
+
     @property
     def db_json(self):
         rdrdct = {v : self.data[k] for k,v in self.MAPPING.items()}
+        return rdrdct
         
