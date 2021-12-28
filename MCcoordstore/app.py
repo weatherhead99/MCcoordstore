@@ -44,6 +44,7 @@ def get_default_style(db):
 def index():
     
     form = AddPOIForm()
+    form.load_style_choices(db)
     if form.validate_on_submit():
         poi = PointOfInterest(name=form.data["name"], public=form.data["public"], user=current_user,
                               coordtype=form.data["coordtp"])
