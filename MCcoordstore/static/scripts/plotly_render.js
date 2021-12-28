@@ -7,6 +7,7 @@ const DEFAULT_DATA =  { x : [],
 			marker : {symbol : [],
 				  size : [],
 				  color : [],
+				  opacity: [],
 				  line : {width : [],
 					  color : []}}};
 
@@ -141,7 +142,7 @@ function svg_style_helper(pathitem, styledata)
 {
     pathitem.setAttributeNS(null, "fill", styledata["marker.color"]);
     pathitem.setAttributeNS(null, "stroke", styledata["marker.line.color"]);
-    pathitem.setAttributeNS(null, "opacity", "0.7");
+    pathitem.setAttributeNS(null, "opacity", styledata["marker.opacity"]);
     pathitem.setAttributeNS(null, "stroke-width", styledata["marker.line.width"]);
 
 }

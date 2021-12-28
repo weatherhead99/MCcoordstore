@@ -199,6 +199,7 @@ DEFAULT_STYLE = {"marker.symbol" : "circle",
                  "marker.size" : 10,
                  "marker.color" : "#3584E4",
                  "marker.line.width" : 0,
+                 "marker.opacity" : 0.7,
                  "marker.line.color" : "#000000"}
 
 def create_db(admin_pass, db):

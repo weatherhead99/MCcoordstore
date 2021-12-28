@@ -26,7 +26,7 @@ Created on Thu Dec  9 22:33:46 2021
 
 from flask_wtf import FlaskForm
 from wtforms import StringField, IntegerField, PasswordField, BooleanField, SelectField, SubmitField
-from wtforms.fields import  HiddenField, IntegerRangeField
+from wtforms.fields import  HiddenField, IntegerRangeField, DecimalRangeField
 from wtforms.validators import DataRequired, EqualTo
 from wtforms.widgets import ColorInput
 from markupsafe import Markup
@@ -76,7 +76,15 @@ class LoginForm(FlaskForm):
 octpl = Markup("updatePlot('{}','{}')")
     
 class StyleEditForm(FlaskForm):
-    stylename = _reqfield(StringField, "style name")
+    STYLE_VERSION = 1
+    MAPPING = {"symbolname" : "marker.symbol",
+               "fillcolor" : "marker.color",
+               "linecolor" : "marker.line.color",
+               "linewidth" : "marker.line.width",
+               "symbolsize" : "marker.size",
+               "opacity" : "marker.opacity"}
+    
+    stylename = _reqfield(StringField, "style name", id="symbolname")
     fillcolor = _reqfield(StringField, "fill colour", widget=ColorInput(),
                           id="fillcolor", render_kw={"onchange" : octpl.format("fillcolor", "marker.color")})
     linecolor = _reqfield(StringField, "line colour", widget=ColorInput(),
@@ -88,3 +96,18 @@ class StyleEditForm(FlaskForm):
                            id="symbolsize", render_kw = {"onchange" : octpl.format("symbolsize", "marker.size")})
 
     symbolname = _reqfield(StringField, id="symtype")
+    opacity = _reqfield(DecimalRangeField, "opacity", id="opacity", places=1,
+                        render_kw = {"onchange" : octpl.format("opacity", "marker.opacity")})
+
+
+    def prefill(self, style: RenderStyle):
+        print(style.style)
+        self.stylename.data = style.name
+
+        for k,v in self.MAPPING.items():
+            getattr(self, k).data = style.style[v]
+                                          
+    @property
+    def db_json(self):
+        rdrdct = {v : self.data[k] for k,v in self.MAPPING.items()}
+        

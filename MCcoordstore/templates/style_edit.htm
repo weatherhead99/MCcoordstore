@@ -3,7 +3,7 @@
 {% block content %}
 
 <script src="https://cdn.plot.ly/plotly-2.8.3.min.js"></script>
-<script src="static/scripts/plotly_render.js"></script>
+<script src="/static/scripts/plotly_render.js"></script>
 
 <div class="columns">
   <div class="poigraph" id="styleplot"></div>
@@ -11,13 +11,20 @@
 
 <p>
 
+  <div id="formdatamapping" style="display: none">
+    {{datamapping}}
+  </div>
+  
+  
 <form id="styleeditform"  method="post">
   {{form.csrf_token}}
   {{form.stylename.label}} {{form.stylename}} <br>
   {{form.fillcolor.label}} {{form.fillcolor}} <br>
   {{form.linecolor.label}} {{form.linecolor}} 
   {{form.linewidth.label}} {{form.linewidth(min="0", max="10", value="2")}} <br>
-  {{form.symbolsize.label}} {{form.symbolsize(min="3", max="30", value="10")}} <br>
+  {{form.symbolsize.label}} {{form.symbolsize(min="3", max="30",
+  value="10")}} <br>
+  {{form.opacity.label}} {{form.opacity(min="0.3", max="1.0", value="0.7")}} <br>
   {{form.symbolname}}
   <input type="submit" onsubmit="submit_check()">
 </form>
@@ -83,15 +90,14 @@
 	  });
 
 
-  const init_upds = new Map(
-      [["fillcolor", "marker.color"],
-       ["linecolor", "marker.line.color"],
-       ["linewidth", "marker.line.width"],
-       ["symbolsize", "marker.size"]]);
-  for([k,w] of init_upds.entries())
+  const mapstr = document.getElementById("formdatamapping").innerHTML;
+  const formdatamapping = JSON.parse(mapstr);
+  
+  for(const [k,w] of Object.entries(formdatamapping))
   {
-      updatePlot(k, w);
-
+      if(k == "symbolname")
+	  continue;
+      updatePlot(k,w);
   };
   
     

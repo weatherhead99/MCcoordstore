@@ -18,11 +18,12 @@
 # along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
 
-from flask import render_template, redirect, flash, request
+from flask import render_template, redirect, flash, request, url_for
 from markupsafe import Markup
 from werkzeug.security import check_password_hash
 from flask_login import login_required, current_user, login_user, logout_user
 import pytz
+import json
 
 from MCcoordstore import create_app
 from .forms import AddPOIForm, SignupForm, LoginForm, StyleEditForm
@@ -157,34 +158,39 @@ def logout():
 def dump_pois():
     return serialize_pois(app, db)
 
-@app.route("/styleedit", methods=["GET","POST"])
+@app.route("/styleedit/<int:styleid>", methods=["GET","POST"])
 @login_required
-def style_edit():
+def style_edit(styleid: int):
+    stmt = db.select(RenderStyle).filter(RenderStyle.styleid == styleid)
+    style = db.session.execute(stmt).scalars().one()
+
+    if not style.user == current_user:
+        flash("you do not have permission to edit this style", "flash-error")
+        return redirect("/")
+    
     form = StyleEditForm()
+
+    try:
+        form.prefill(style)
+    except KeyError:
+        print("missing key, probably not in style db data, continuing...")
+        
+    
     if form.validate_on_submit():
         flash("style updated", "flash-success")
         return render_template("style_edit.htm", form=form)
-    return render_template("style_edit.htm", form=form)
+    return render_template("style_edit.htm", form=form, datamapping=json.dumps(form.MAPPING))
 
-@app.route("/rendertest")
-def render_test():
-    return render_template("plotly_render_test.htm")
 
 @app.route("/newstyle", methods=["GET","POST"])
 @login_required
 def style_create():
     form = StyleEditForm()
     if form.validate_on_submit():
-    
-        mapping = {"symbolname" : "marker.symbol",
-                   "fillcolor" : "marker.color",
-                   "linecolor" : "marker.line.color",
-                   "linewidth" : "marker.line.width",
-                   "symbolsize" : "marker.size"}
-        
-        rdrdct = {v : form.data[k] for k,v in mapping.items()}
-        
+
+        rdrdct = form.db_json
         style = RenderStyle(name = form.data["stylename"],
+                            styleversion = form.STYLE_VERSION,
                             style = rdrdct,
                             user = current_user)    
         db.session.add(style)
@@ -194,6 +200,6 @@ def style_create():
     elif request.method=="POST":
         flash("form not validated!", "flash-error")
     
-    
-    return render_template("style_edit.htm", form=form)
+        print(json.dumps(form.MAPPING))
+    return render_template("style_edit.htm", form=form, datamapping=json.dumps(form.MAPPING))
 
