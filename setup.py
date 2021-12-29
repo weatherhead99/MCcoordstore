@@ -19,7 +19,7 @@ from setuptools import setup, find_packages
 import pathlib
 
 HERE = pathlib.Path(__file__).parent
-README = (HERE / "README").read_text()
+README = (HERE / "README.md").read_text()
 
 setup(name="MCcoordstore",
       version="0.0.5.dev",
