@@ -22,7 +22,7 @@ HERE = pathlib.Path(__file__).parent
 README = (HERE / "README").read_text()
 
 setup(name="MCcoordstore",
-      version="0.0.4.dev",
+      version="0.0.5.dev",
       description="simple coordinate store for minecraft",
       long_description=README,
       long_description_content_type="text/markdown",

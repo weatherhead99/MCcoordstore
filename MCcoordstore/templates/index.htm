@@ -3,6 +3,7 @@
 {% block headblock %}
 
 <script src="https://cdn.plot.ly/plotly-2.8.3.min.js"></script>
+<script src="https://ajax.googleapis.com/ajax/libs/jquery/3.5.1/jquery.min.js"></script>
 <script src="static/scripts/plotly_render.js"></script>
 
 {% endblock %}
@@ -233,7 +234,21 @@
 </script>
 
 {% if current_user.is_authenticated %}
-  <h2>Add new POI</h2>
+<h2>Add new POI</h2>
+(Press F3+c in minecraft to copy co-ordinates to clipboard)<br>
+
+<div class="clipboardunavailable">
+  Paste your clipboard input here:
+  <input type="text" id="clipboardcontents">
+</div>
+
+<div class="clipboardavailable">
+  <button id="clipboardbutton">Fill from clipboard</button>
+  
+</div>
+
+
+
   <form method="post" class="poiform">
   {{ form.csrf_token }}
   {{ form.name.label }} {{ form.name }}
@@ -246,6 +261,8 @@
   <input type="submit">
   </form>
 {% endif %}
+
+
 
 
 <h2> List of POIs </h2>
@@ -266,6 +283,50 @@
 
 <script>
   fetch_pois("name");
+
+  function parsepastedcoords(txt) {
+      const  loc = txt.search("@s");
+      const coords = txt.slice(loc +3).split(" ");
+      const vals =  coords.filter(x=> x.length > 0).map(x => Number(x));
+      if(vals.length != 5)
+	  throw "invalid coordinate length";
+      return vals;
+  };
+
+  function processclipboard(pastedata)
+  {
+      const coords = parsepastedcoords(pastedata);
+
+      $("#x").val(Math.round(coords[0]));
+      $("#y").val(Math.round(coords[1]));
+      $("#z").val(Math.round(coords[2]));
+  }
+  
+  $(document).ready( function () {
+      if("readText" in navigator.clipboard)
+      {
+	  $(".clipboardavailable").show();
+	  $(".clipboardunavailable").hide();
+	  $("#clipboardbutton").click( async function(event) {
+	      const pastedata = await navigator.clipboard.readText();
+	      return processclipboard(pastedata);
+	  });
+      }
+      else
+      {
+	  $(".clipboardavailable").hide();
+	  $(".clipboardunavailable").show();
+
+	  $("#clipboardcontents").on("paste", async function(event) {
+	      const pastedata = await
+	      event.originalEvent.clipboardData.getData("text/plain");
+	      return processclipboard(pastedata);
+	  });
+	  
+      }
+      
+  });
+  
 </script>
 
 
