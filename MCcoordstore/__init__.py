@@ -27,21 +27,23 @@ import base64
 from .api_poi import poi_api, setup_api
 from .login import lman
 from .db import User, RenderStyle, CoordType, PointOfInterest, Tag
+from dynaconf import FlaskDynaconf, Validator
 
-
-
-CONFIG_ENVVAR = "MCCOORDSTORE_CONFIG"
-
+extra_file_env_var = "MCCOORDSTORE_CONFIG"
 
 def create_app(test_config: Dict[str, Any]=None):
     app = Flask(__name__, instance_relative_config=True)
     
     if test_config is None:
-        if os.environ.get(CONFIG_ENVVAR) is None:
-            print("WARNING: using default test config! DO NOT USE IN PRODUCTION!")
-            app.config.from_object("MCcoordstore.default_config.DefaultConfig")
-        else:
-            app.config.from_envvar(CONFIG_ENVVAR, silent=False)
+        fls = ["mccoordstore.toml"]
+        envfl = os.environ.get(extra_file_env_var)
+        if envfl is not None:
+            fls.append(envfl)
+
+        FlaskDynaconf(app, settings_files="mccoordstore.toml",
+                      validators = [ Validator("secret_key", must_exist=True),
+                                     Validator("sqlalchemy_database_uri", must_exist=True),
+                                     Validator("sqlalchemy_track_modifications", default=False)])
     else:
         app.config.from_mapping(test_config)
 

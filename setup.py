@@ -47,5 +47,6 @@ setup(name="MCcoordstore",
                           "itsdangerous",
                           "flask-restless-NG",
                           "pytz",
-                          "python-dotenv"]
+                          "python-dotenv",
+                          "dynaconf"]
       )

@@ -27,6 +27,4 @@ Created on Fri Dec 10 22:19:38 2021
 
 
 class DefaultConfig:
-    SECRET_KEY="super_secret_key"
-    SQLALCHEMY_DATABASE_URI="sqlite:///mccoordstore.sqlite"
     SQLALCHEMY_TRACK_MODIFICATIONS=False
