@@ -5,6 +5,7 @@
 <script src="https://cdn.plot.ly/plotly-2.8.3.min.js"></script>
 <script src="https://ajax.googleapis.com/ajax/libs/jquery/3.5.1/jquery.min.js"></script>
 <script src="static/scripts/plotly_render.js"></script>
+<script src="static/scripts/poifetch.js"></script>
 
 {% endblock %}
 
@@ -40,11 +41,6 @@
 	  var typecell = row.insertCell(-1);
 	  typecell.innerHTML = attrs["typename"];
 
-	  //var stylecell = row.insertCell(-1);
-	  //var stylename = lookupRelationship(item, jsondata, "style",
-	  //"name");
-	  //stylecell.innerHTML = stylename;
-
 	  var  stylepreview = row.insertCell(-1);
 	  stylepreview.setAttribute("class", "stylepreview");
 	  const styleid = item["relationships"]["style"]["data"]["id"];
@@ -75,30 +71,13 @@
 
 	      var deletelink ='<a href="/poi/delete/' + poiid + '">delete</a>';
 	      deletecell.innerHTML = deletelink;
-
-	      
+   
 	  }
 
-	  
       }
   };
 
 
-  function lookupRelationship(poiitem, jsondata, relname, attrname=null)
-  {
-      var relid = poiitem["relationships"][relname]["data"]["id"];
-      var reltype = poiitem["relationships"][relname]["data"]["type"];
-      var flt = jsondata["included"].filter( x=> (x["id"] == relid && x["type"]
-						  == reltype));
-      if(flt.length > 1)
-	  throw "logic error: multiple duplicate relationships found";
-      if(flt.length == 0)
-	  throw "logic error: no results found!";
-      if(attrname != null)
-	  return flt[0]["attributes"][attrname];
-      else
-	  return flt[0]["attributes"];
-  }      
 
   function plotpoints(jsondata)
   {
@@ -141,7 +120,6 @@
 	  
 	  for( const tgt of targets)
 	  {
-	      
 	      var thispath = path.cloneNode();
 	      var svgitem = svg_centred_render_helper(thispath, tgt, -1, null,
 	      10);
@@ -149,66 +127,44 @@
       }
       
   }
-  
-  var ordermap =  new Map();
-  const style_data = new Map();
-  async function fetch_pois(sortkey=null) {
-      styles_to_render.clear();
-      options = {method: "GET",
-		 headers: {"Accept": "application/vnd.api+json"},
-		 credentials: "same-origin"};
-      url = new URL("/api/poi", document.URL)
-      params = [["page[number]", "1"], ["include", "user,style"],
-		["fields[user]", "displayname"],
-		["fields[style]", "name,style"]];
-      if(sortkey != null)
-      {
-	  if( !(sortkey  in ordermap))
-	  {
-	      ordermap[sortkey] = true;
-	  }
-	  else if(ordermap[sortkey])
-	  {
-	      ordermap[sortkey] = false;
-	      sortkey = "-" + sortkey;
-	  }
-	  else
-	  {
-	      ordermap[sortkey] = true;
-	  }
-	   params.push(["sort", String(sortkey)]);
-      }
-      url.search = new URLSearchParams(params).toString();
 
+  const ptblfill = new POITable();
+  const style_data = new Map();
+  
+  function tbl_init(poifiller) {
+      styles_to_render.clear();
       netherplot.clearPlot();
       overworldplot.clearPlot();
-
       clearPOItable();
-      for(;;)
+  };
+
+  function tbl_callback(poifiller, rjson)
+  {
+      fillPOItable(rjson);
+      plotpoints(rjson);
+      
+      for(item of rjson["included"].filter(x=>x["type"]=="style"))
       {
-	  const response = await fetch(url, options);
-	  const rjson = await response.json();
-	  fillPOItable(rjson);
-	  plotpoints(rjson);
-
-	  for(item of rjson["included"].filter(x=>x["type"]=="style"))
+	  const styleid = Number(item["id"]);
+	  if( ! style_data.has(styleid))
 	  {
-	      const styleid = Number(item["id"]);
-	      if( ! style_data.has(styleid))
-	      {
-		  const stylestyle = item["attributes"]["style"];
-		  style_data.set(styleid, stylestyle)
-	      }
+	      const stylestyle = item["attributes"]["style"];
+	      style_data.set(styleid, stylestyle)
 	  }
-	  
-	  if(rjson["links"]["next"] == null)
-	      break;	
-	  url = rjson["links"]["next"];
       }
+      
+  };
 
+  function tbl_final(poifiller)
+  {
       render_all_styles(style_data);
-
   }
+  
+  async function fetch_pois(sortkey = null) {
+      await ptblfill.fetch_pois(tbl_init, tbl_callback, tbl_final, sortkey);
+  }
+
+  
 
   
 </script>
@@ -254,7 +210,7 @@
   {{ form.name.label }} {{ form.name }}
   {{ form.x.label }} {{ form.x(class_="coordnum") }}
   {{ form.y.label }} {{ form.y(class_="coordnum") }}
-{{ form.z.label }} {{ form.z(class_="coordnum") }}
+  {{ form.z.label }} {{ form.z(class_="coordnum") }}
   {{form.coordtp.label}} {{form.coordtp}}
   {{ form.public.label }} {{ form.public }}
   {{form.style.label }} {{form.style}}
