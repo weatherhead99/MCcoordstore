@@ -1,0 +1,49 @@
+{% extends "base.htm" %}
+
+
+{% block headblock %}
+<script src="https://cdn.plot.ly/plotly-2.8.3.min.js"></script>
+<script src="/static/scripts/plotly_render.js"></script>
+<script src="/static/scripts/style_preview.js"></script>
+
+{% endblock %}
+
+{% block content %}
+
+<h1>User Profile</h1>
+
+<h2>Edit Information</h2>
+
+<form method="post">
+  {{form.csrf_token}}
+  {{form.displayname.label}} {{form.displayname}} <br>
+  {{form.default_style_name.label}} {{form.default_style_name}} <br>
+
+  <div id="stylepreview"></div> <br>
+  
+  <input type="submit" formaction="/profile/userdetails">
+  
+  <h2> Change Password </h2>
+  
+  {{form.newpassword.label}} {{form.newpassword}} <br>
+  {{form.password_confirm.label}} {{form.password_confirm}} <br>
+  <input type="submit" formaction="/profile/password">
+
+</form>
+
+
+<script>
+    const formelem = document.getElementById("styleselectfield");
+    formelem.addEventListener(
+    'change',
+    function() {updatestylepreview(formelem);});
+
+    updatestylepreview(formelem);
+ 
+</script>
+
+
+<h2>Your POIs</h2>
+
+
+{% endblock %}

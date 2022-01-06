@@ -26,7 +26,7 @@ import pytz
 import json
 
 from MCcoordstore import create_app
-from .forms import AddPOIForm, SignupForm, LoginForm, StyleEditForm
+from .forms import AddPOIForm, SignupForm, LoginForm, StyleEditForm, UserEditForm
 from .db import get_db, User, PointOfInterest, POI_NAME_LOOKUP, RenderStyle
 from .utils import serialize_pois
 
@@ -43,13 +43,14 @@ def get_default_style(db):
 @app.route("/", methods=["POST", "GET"])
 def index():
     
-    form = AddPOIForm()
-    form.load_style_choices(db)
+    form = AddPOIForm(db)
+    form.prefill_user_default_style(current_user)
     if form.validate_on_submit():
         poi = PointOfInterest(name=form.data["name"], public=form.data["public"], user=current_user,
                               coordtype=form.data["coordtp"])
         poi.coords = form.coords
-        style = get_default_style(db)
+        stmt = db.select(RenderStyle).where(RenderStyle.styleid == form.data["style"])
+        style  = db.session.execute(stmt).scalars().one()
         poi.style = style
         
         db.session.add(poi)
@@ -62,8 +63,8 @@ def index():
 @app.route("/add_manual", methods=["POST","GET"])
 @login_required
 def add_manual():
-    form = AddPOIForm()
-    form.load_style_choices(db)
+    form = AddPOIForm(db)
+    form.prefill_user_default_style(current_user)
     if form.validate_on_submit():
         #TODO: user guest only for now
         poi = PointOfInterest(name=form.data["name"], public=form.data["public"], user=current_user,
@@ -89,8 +90,7 @@ def edit_poi(poiid: int):
         flash("you do not have permission to edit this POI", "flash-error")
         return redirect("/")
     
-    form = AddPOIForm()
-    form.load_style_choices(db)
+    form = AddPOIForm(db)
 
     if form.validate_on_submit():
         form.update_object(poi)
@@ -246,3 +246,37 @@ def style_create():
         print(json.dumps(form.MAPPING))
     return render_template("style_edit.htm", form=form, datamapping=json.dumps(form.MAPPING))
 
+
+@app.route("/profile/<formaction>", methods=["POST"])
+@app.route("/profile", methods=["GET"], defaults={"formaction" : None})
+@login_required
+def user_profile(formaction: str):
+    form = UserEditForm(db)
+
+    if request.method == "POST":
+        if formaction == "password":
+            if form.data["newpassword"] != form.data["password_confirm"]:
+                flash("passwords must match", "flash-error")
+                return render_template("user_profile.htm", form=form)
+            current_user.change_password(form.data["newpassword"])
+            db.session.commit()
+            flash("password changed", "flash-success")
+            return render_template("user_profile.htm", form=form)
+        elif formaction == "userdetails":
+            if form.data["displayname"] != current_user.displayname:
+                current_user.displayname = form.data["displayname"]
+                db.session.commit()
+                flash("display name changed", "flash-success")
+            if form.data["default_style_name"] != current_user.default_style.styleid:
+                newstyleid = form.data["default_style_name"]
+                print("newstyleid: %d"% newstyleid)
+                print("oldstyleid: %d" % current_user.default_style.styleid)
+                newstylestmt = db.select(RenderStyle).filter(RenderStyle.styleid == newstyleid)
+                newstyle = db.session.execute(newstylestmt).scalars().one()
+                current_user.default_style = newstyle
+                db.session.commit()
+                flash("default style changed", "flash-success")
+            return render_template("user_profile.htm", form=form)
+    form.prefill(current_user)
+    return render_template("user_profile.htm", form=form)
+                

@@ -101,6 +101,11 @@ class User(UserMixin, db.Model):
             randchoice = randint(cls.MIN_ALTERNATE_ID, cls.MAX_ALTERNATE_ID)
         return randchoice
 
+    def change_password(self, newpasswd: str) -> None:
+        newhash = generate_password_hash(newpasswd)
+        self.hashed_pw = newhash
+        self.alternate_id = self.random_unique_alternateid()
+        
 
 
 class RenderStyle(db.Model):

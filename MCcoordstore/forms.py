@@ -26,45 +26,58 @@ Created on Thu Dec  9 22:33:46 2021
 
 from flask_wtf import FlaskForm
 from wtforms import StringField, IntegerField, PasswordField, BooleanField, SelectField, SubmitField
-from wtforms.fields import  HiddenField, IntegerRangeField, DecimalRangeField
+from wtforms.fields import HiddenField, IntegerRangeField, DecimalRangeField
 from wtforms.validators import DataRequired, EqualTo
 from wtforms.widgets import ColorInput
 from markupsafe import Markup
-from .db import CoordType, POI_NAME_LOOKUP, RenderStyle, PointOfInterest
+from .db import CoordType, POI_NAME_LOOKUP, RenderStyle, PointOfInterest, User
 
 def _reqfield(func, *args, **kwargs):
     return func(*args, **kwargs, validators=[DataRequired()])
 
-class AddPOIForm(FlaskForm):
-    name = _reqfield(StringField, "name")
-    x = _reqfield(IntegerField, "x")
-    y = _reqfield(IntegerField, "y")
-    z = _reqfield(IntegerField, "z")
-    
-    typechoice = [(str(i.value), POI_NAME_LOOKUP[i]) for i in CoordType]
-    
-    coordtp = _reqfield(SelectField, "type", choices=typechoice)
-    public = BooleanField("public")
 
-    style = _reqfield(SelectField, "style", id="styleselectfield", coerce=int)
-    
-    @property
-    def coords(self):
-        return (self.data["x"], self.data["y"], self.data["z"])
-
-    def load_style_choices(self, db):
+class StyleFormMixin:
+    def load_style_choices(self, db, field: SelectField):
         stmt = db.select(RenderStyle)
         choices = []
         for style in db.session.execute(stmt).scalars():
             choices.append((style.styleid, style.name))
-        self.style.choices = choices
+        field.choices = choices
 
-    def prefill(self, poi: PointOfInterest):
+
+class AddPOIForm(FlaskForm, StyleFormMixin):
+    name = _reqfield(StringField, "name")
+    x = _reqfield(IntegerField, "x")
+    y = _reqfield(IntegerField, "y")
+    z = _reqfield(IntegerField, "z")
+
+    typechoice = [(str(i.value), POI_NAME_LOOKUP[i]) for i in CoordType]
+
+    coordtp = _reqfield(SelectField, "type", choices=typechoice)
+    public = BooleanField("public")
+
+    style = _reqfield(SelectField, "style", id="styleselectfield", coerce=int)
+
+    def __init__(self, db):
+        super().__init__()
+        self.load_style_choices(db, self.style)
+
+    @property
+    def coords(self):
+        return (self.data["x"], self.data["y"], self.data["z"])
+
+    def prefill_user_default_style(self, user: User):
+        self.style.data = user.default_style.styleid
+
+    def prefill(self, poi: PointOfInterest, user: User = None):
         self.name.data = poi.name
         self.x.data = poi.coord_x
         self.y.data = poi.coord_y
         self.z.data = poi.coord_z
-        self.style.data = poi.style.styleid
+        if user is not None:
+            self.style.data = user.default_style.styleid
+        else:
+            self.style.data = poi.style.styleid
         self.coordtp.data = poi.coordtype.value
         self.public.data = poi.public
 
@@ -75,13 +88,15 @@ class AddPOIForm(FlaskForm):
         poi.public = self.data["public"]
         poi.styleid = self.data["style"]
 
-        
+
 class SignupForm(FlaskForm):
     username = _reqfield(StringField, "username")
     displayname = _reqfield(StringField, "display name")
-    password = PasswordField("password", [DataRequired(), 
-                                          EqualTo("confirm", message="passwords must match")])
-    confirm  = PasswordField("confirm password", [DataRequired()])
+    password = PasswordField("password",
+                             [DataRequired(),
+                              EqualTo("confirm", message="passwords must match")])
+    confirm = PasswordField("confirm password", [DataRequired()])
+
 
 class LoginForm(FlaskForm):
     username = _reqfield(StringField, "username")
@@ -89,22 +104,39 @@ class LoginForm(FlaskForm):
     remember = BooleanField("remember me")
 
 
+class UserEditForm(FlaskForm, StyleFormMixin):
+    displayname = StringField("display name")
+    newpassword = PasswordField("new password")
+    password_confirm = PasswordField("confirm password")
+    default_style_name = SelectField("my default style", id="styleselectfield", coerce=int)
+
+    def __init__(self, db):
+        super().__init__()
+        self.load_style_choices(db, self.default_style_name)
+
+    def prefill(self, usr: User):
+        self.displayname.data= usr.displayname
+        usrstyle = usr.default_style
+        self.default_style_name.data = usrstyle.styleid
+
 octpl = Markup("updatePlot('{}','{}')")
-    
+
+
 class StyleEditForm(FlaskForm):
     STYLE_VERSION = 1
-    MAPPING = {"symbolname" : "marker.symbol",
-               "fillcolor" : "marker.color",
-               "linecolor" : "marker.line.color",
-               "linewidth" : "marker.line.width",
-               "symbolsize" : "marker.size",
-               "opacity" : "marker.opacity"}
-    
+    MAPPING = {"symbolname": "marker.symbol",
+               "fillcolor": "marker.color",
+               "linecolor": "marker.line.color",
+               "linewidth": "marker.line.width",
+               "symbolsize": "marker.size",
+               "opacity": "marker.opacity"}
+
     stylename = _reqfield(StringField, "style name", id="symbolname")
     fillcolor = _reqfield(StringField, "fill colour", widget=ColorInput(),
-                          id="fillcolor", render_kw={"onchange" : octpl.format("fillcolor", "marker.color")})
+                          id="fillcolor", render_kw={"onchange": octpl.format("fillcolor", "marker.color")})
     linecolor = _reqfield(StringField, "line colour", widget=ColorInput(),
-                          id="linecolor", render_kw = {"onchange" : octpl.format("linecolor", "marker.line.color")})
+                          id="linecolor",
+                          render_kw = {"onchange": octpl.format("linecolor", "marker.line.color")})
     
     linewidth = _reqfield(IntegerRangeField, "line width", 
                           id="linewidth", render_kw = {"onchange" : octpl.format("linewidth", "marker.line.width")})

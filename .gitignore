@@ -2,3 +2,8 @@
 *#
 *.egg-info
 *~
+.spyproject*
+*.sqlite
+*.whl
+build/*
+dist/*
