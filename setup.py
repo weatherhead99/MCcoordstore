@@ -22,7 +22,7 @@ HERE = pathlib.Path(__file__).parent
 README = (HERE / "README.md").read_text()
 
 setup(name="MCcoordstore",
-      version="0.0.5.dev",
+      version="0.0.6.dev",
       description="simple coordinate store for minecraft",
       long_description=README,
       long_description_content_type="text/markdown",
@@ -30,23 +30,23 @@ setup(name="MCcoordstore",
       author="Dan Weatherill",
       author_email="dan.weatherill@cantab.net",
       url="https://github.com/weatherhead99/MCcoordstore",
-      packages = find_packages(),
-      include_package_data = True,
-      classifiers = [
+      packages=find_packages(),
+      include_package_data=True,
+      classifiers=[
           "Development Status :: 2 - Pre-Alpha",
           "Framework :: Flask",
           "License :: OSI Approved :: GNU Affero General Public License v3",
           "Topic :: Internet :: WWW/HTTP :: WSGI :: Application"
           ],
-      install_requires = ["flask",
-                          "flask_sqlalchemy",
-                          "Flask-WTF",
-                          "Flask-login",
-                          "werkzeug",
-                          "flask-migrate",
-                          "itsdangerous",
-                          "flask-restless-NG",
-                          "pytz",
-                          "python-dotenv",
-                          "dynaconf"]
+      install_requires=["flask",
+                        "flask_sqlalchemy",
+                        "Flask-WTF",
+                        "Flask-login",
+                        "werkzeug",
+                        "flask-migrate",
+                        "itsdangerous",
+                        "flask-restless-NG",
+                        "pytz",
+                        "python-dotenv",
+                        "dynaconf"]
       )
