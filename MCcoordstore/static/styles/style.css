@@ -40,6 +40,11 @@
 
 }
 
+.style_list th, .style_list td, table.style_list {
+    border: 1px solid black;
+}
+
+
 .coordnum {
     width: 10ch;
 }

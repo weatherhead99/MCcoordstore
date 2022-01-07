@@ -28,6 +28,14 @@
     {% endblock %}
   </head>
   <body>
+
+    <h1 class="website_title">MCCoordstore</h1>
+    <h2>Points of interest in Minecraft</h2>
+
+    <div class="above_navbar"> 
+    {% block above_navbar %}
+    {% endblock %}
+    </div>
     <!--navigation bar -->
     <p>
     <div class="navbar">
@@ -48,9 +56,8 @@
     </div>
     </p>
 
-    {% if current_user.is_authenticated %}
-    <h2> Welcome, {{ current_user.username }} </h2>
-    {% endif %}
+    
+
     
     {% with messages = get_flashed_messages() %}
     {% if messages %}

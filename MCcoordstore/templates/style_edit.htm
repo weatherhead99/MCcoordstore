@@ -1,5 +1,18 @@
 {% extends "base.htm" %}
 
+{% block above_navbar %}
+
+{% if request.path == "/newstyle" %} 
+<h1>Create Style</h1>
+
+{% else %}
+<h1>Edit Style</h1>
+
+{% endif %}
+
+{% endblock %}
+
+
 {% block content %}
 
 <script src="https://cdn.plot.ly/plotly-2.8.3.min.js"></script>

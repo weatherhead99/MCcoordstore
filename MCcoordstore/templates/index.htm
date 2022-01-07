@@ -10,7 +10,15 @@
 {% endblock %}
 
 
+{% block above_navbar %}
+
+{% endblock %}
+
 {% block content %}
+
+{% if current_user.is_authenticated %}
+<h2 class="user_welcome"> Welcome, {{ current_user.username }} </h2>
+{% endif %}
 
 <script>
   'use strict';
@@ -131,7 +139,7 @@
 </script>
 
 
-<h1> Minecraft Points of Interest </h1>
+
 
 <h2>POI map</h2>
 <div class="columns">
@@ -186,8 +194,12 @@
 
 <div id="current_user_id" hidden>{{current_user.userid}}</div>
 
+<div class="table_instructions">
+  Click on a table heading to sort the POIs by that ordering
+</div>
+
 <table class="poi_list" id="list_of_pois">
-  <th onclick="ptblfill.fetch_pois('name')">Name</th>
+  <th onclick="ptblfill.fetch_pois('lowercasename')">Name</th>
   <th onclick="ptblfill.fetch_pois('coord_x')">X</th>
   <th onclick="ptblfill.fetch_pois('coord_y')">Y</th>
   <th onclick="ptblfill.fetch_pois('coord_z')">Z</th>
@@ -199,7 +211,7 @@
 </table>
 
 <script>
-  ptblfill.fetch_pois("name");
+  ptblfill.fetch_pois("lowercasename");
 
   function parsepastedcoords(txt) {
       const  loc = txt.search("@s");

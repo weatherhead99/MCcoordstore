@@ -18,9 +18,15 @@
 
 {% extends "base.htm" %}
 
+{% block above_navbar %}
+<h1>Login</h1>
+
+{% endblock %}
+
+
 {% block content %}
 
-<h2>Login</h2>
+
 
 <form method="post" action="/login">
   {{ form.csrf_token }}

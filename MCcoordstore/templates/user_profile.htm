@@ -9,11 +9,16 @@
 
 {% endblock %}
 
+
+{% block above_navbar %}
+<h1>User Profile</h1>
+{% endblock %}
+
 {% block content %}
 
 <div id="current_user_id" hidden>{{current_user.userid}}</div>
 
-<h1>User Profile</h1>
+
 
 <h2>Edit Information</h2>
 

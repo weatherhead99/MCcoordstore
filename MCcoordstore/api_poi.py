@@ -31,41 +31,41 @@ poi_api = Blueprint("poi", __name__)
 @login_required
 def get_token():
     if current_user is None:
-        return jsonify({"error" : "Require logged in user to get API token"})
-    
+        return jsonify({"error": "Require logged in user to get API token"})
+
     token = current_user.generate_api_token(current_app)
-    
-    return jsonify({"token" : token,
-                    "error" : ""})
-    
+    return jsonify({"token": token,
+                    "error": ""})
+
 
 def api_auth_check(*args, **kwargs):
     if not current_user.is_authenticated:
         raise ProcessingException(detail="not authenticated", status=401)
-        
+
+
 def remove_nonpublic_collection_poi(filters, **kwargs):
     if not current_user.is_authenticated:
-        filters.append({"name": "public", "op": "eq", "val" : True})
+        filters.append({"name": "public", "op": "eq", "val": True})
 
-    
+
 def setup_api(app, db):
     manager = APIManager(app, session=db.session)
-    
-    
-    poi_preproc = {"GET_COLLECTION" : [remove_nonpublic_collection_poi],
-                   "GET_RESOURCE" : [api_auth_check] }
+
+    poi_preproc = {"GET_COLLECTION": [remove_nonpublic_collection_poi],
+                   "GET_RESOURCE": [api_auth_check]}
     manager.create_api(PointOfInterest, methods=["GET"], collection_name="poi",
-                       additional_attributes=["coords", "typename"], exclude=["coord_x","coord_y","coord_z", "tags", "poiid"],
+                       additional_attributes=["coords", "typename"],
+                       exclude=["coord_x", "coord_y", "coord_z", "tags", "poiid"],
                        preprocessors=poi_preproc)
-    
-    user_preproc = {"GET_COLLECTION" : [api_auth_check],
-                    "GET_RESOURCE" : [api_auth_check]}
-    
+
+    user_preproc = {"GET_COLLECTION": [api_auth_check],
+                    "GET_RESOURCE": [api_auth_check]}
+
     manager.create_api(User, methods=["GET"],
                        exclude=["hashed_pw", "tags", "userid", "username"],
                        preprocessors=user_preproc)
 
-    style_preproc = {"GET_COLLECTION" : [api_auth_check],
-                     "GET_RESOURCE" : [api_auth_check]}
+    style_preproc = {"GET_COLLECTION": [api_auth_check],
+                     "GET_RESOURCE": [api_auth_check]}
     manager.create_api(RenderStyle, methods=["GET"], collection_name="style",
                        exclude=["styleid"], preprocessors=style_preproc)

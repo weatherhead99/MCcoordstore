@@ -200,6 +200,7 @@ class POITable {
 	}
 
 	this.finalfn();
+	return false;
     }
     
 

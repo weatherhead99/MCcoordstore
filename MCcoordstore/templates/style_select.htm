@@ -6,6 +6,10 @@
 
 {% endblock %}
 
+{% block above_navbar %}
+<h1>Edit Style</h1>
+{% endblock %}
+
 
 {% block content %}
 <div id="userid" style="display: none">{{ current_user.alternate_id }}</div>
@@ -15,7 +19,7 @@
 
 
 <h3>Styles that you created</h3>
-<table id="list_of_styles" class="poi_list">
+<table id="list_of_styles" class="style_list">
   <tr>
     <th>Style name</th>
     <th>Style Preview</th>

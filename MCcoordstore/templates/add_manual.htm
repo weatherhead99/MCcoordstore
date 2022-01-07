@@ -26,8 +26,12 @@
 
 {% endblock %}
 
+{% block above_navbar %}
+<h1>Add POI manually</h1>
+{% endblock %}
+
 {% block content %}
-<h1> Add POI manually </h1>
+
 
 <form method="post">
   {{ form.csrf_token }}
