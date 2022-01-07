@@ -18,7 +18,6 @@
 # along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
 
-
 from flask.cli import with_appcontext
 from flask_sqlalchemy import SQLAlchemy
 from datetime import datetime, timezone
@@ -43,7 +42,6 @@ convention = {
 }
 
 
-
 metadata = MetaData(naming_convention=convention)
 db = SQLAlchemy(metadata=metadata)
 
@@ -57,25 +55,27 @@ def _server_random_sqlite_range():
 
 class User(UserMixin, db.Model):
     __tablename__ = "user"
-    MIN_ALTERNATE_ID=USER_MIN_ALTERNATE_ID
-    MAX_ALTERNATE_ID=USER_MAX_ALTERNATE_ID
-    
-    userid = db.Column(db.Integer, primary_key = True)
+    MIN_ALTERNATE_ID = USER_MIN_ALTERNATE_ID
+    MAX_ALTERNATE_ID = USER_MAX_ALTERNATE_ID
+
+    userid = db.Column(db.Integer, primary_key=True)
     username = db.Column(db.String(80), unique=True, nullable=False)
     displayname = db.Column(db.String(80), unique=True, nullable=False)
     hashed_pw = db.Column(db.String, nullable=False)
     is_admin = db.Column(db.Boolean, default=False)
-    
-    alternate_id = db.Column(db.Integer, unique=True, nullable=False, server_default=_server_random_sqlite_range())
-    default_styleid = db.Column(db.Integer, db.ForeignKey("renderstyle.styleid", use_alter=True), nullable=True)
+    lowercasedisplayname = column_property(func.lower(displayname))
+
+    alternate_id = db.Column(db.Integer, unique=True, nullable=False,
+                             server_default=_server_random_sqlite_range())
+    default_styleid = db.Column(db.Integer, db.ForeignKey("renderstyle.styleid",use_alter=True),
+                                nullable=True)
     default_style = db.relationship("RenderStyle", foreign_keys=[default_styleid])
-   
-    
+
     @classmethod
     def create_new_user(cls, username: str, displayname: str, password: str) -> "User":
         pwhash = generate_password_hash(password)
         altid = cls.random_unique_alternateid()
-        return User(username = username, displayname=displayname, 
+        return User(username=username, displayname=displayname,
                     hashed_pw=pwhash, alternate_id=altid)
 
     def get_id(self):
@@ -84,20 +84,22 @@ class User(UserMixin, db.Model):
     def generate_api_token(self, app, expiration_seconds: int = 86400) -> bytes:
         secret_key = app.config["SECRET_KEY"]
         ser = TimedJSONWebSignatureSerializer(secret_key, expiration_seconds)
-        return ser.dumps({"userid" : self.alternate_id}).decode("ASCII")
-    
+        return ser.dumps({"userid": self.alternate_id}).decode("ASCII")
+
     @classmethod
     def verify_api_token(cls, app, token: bytes):
         secret_key = app.config["SECRET_KEY"]
         ser = TimedJSONWebSignatureSerializer(secret_key)
         data = ser.loads(token)
         user = cls.query.filter_by(alternate_id=data["userid"]).one()
-        return user        
+        return user
 
     @classmethod
     def random_unique_alternateid(cls):
         randchoice = randint(cls.MIN_ALTERNATE_ID, cls.MAX_ALTERNATE_ID)
-        rcquery = lambda s :  cls.query.filter_by(alternate_id=s).limit(1).first()
+
+        def rcquery(s):
+            return cls.query.filter_by(alternate_id=s).limit(1).first()
         while rcquery(randchoice) is not None:
             randchoice = randint(cls.MIN_ALTERNATE_ID, cls.MAX_ALTERNATE_ID)
         return randchoice
@@ -106,25 +108,27 @@ class User(UserMixin, db.Model):
         newhash = generate_password_hash(newpasswd)
         self.hashed_pw = newhash
         self.alternate_id = self.random_unique_alternateid()
-        
 
 
 class RenderStyle(db.Model):
     __tablename__ = "renderstyle"
-    styleid = db.Column(db.Integer, primary_key = True)
+    styleid = db.Column(db.Integer, primary_key=True)
     name = db.Column(db.String(80), nullable=True)
     style = db.Column(db.PickleType)
     userid = db.Column(db.Integer, db.ForeignKey("user.userid"))
-    user = db.relationship("User", backref=db.backref("styles"), foreign_keys=[userid])
-    styleversion = db.Column(db.Integer,  default=1, nullable=False, server_default="1")
+    user = db.relationship("User", backref=db.backref("styles"),
+                           foreign_keys=[userid])
+    styleversion = db.Column(db.Integer,  default=1, nullable=False,
+                             server_default="1")
     is_removable = db.Column(db.Boolean, default=True)
-    
+
 
 class CoordType(enum.IntEnum):
     OVERWORLD = 1,
     NETHER = 2,
     END = 3,
     UNDEFINED = 0
+
 
 POI_NAME_LOOKUP = {CoordType.OVERWORLD: "Overworld",
                    CoordType.NETHER: "The Nether",
@@ -167,8 +171,6 @@ class PointOfInterest(db.Model):
     def typename(self):
         return POI_NAME_LOOKUP[self.coordtype]
 
-
-
     @coords.setter
     def coords(self, val: Sequence[int]):
         if len(val) != 3:
@@ -209,11 +211,11 @@ def get_db(app):
 
 
 DEFAULT_STYLE = {"marker.symbol": "circle",
-                 "marker.size" : 10,
-                 "marker.color" : "#3584E4",
-                 "marker.line.width" : 0,
-                 "marker.opacity" : 0.7,
-                 "marker.line.color" : "#000000"}
+                 "marker.size": 10,
+                 "marker.color": "#3584E4",
+                 "marker.line.width": 0,
+                 "marker.opacity": 0.7,
+                 "marker.line.color": "#000000"}
 
 
 def create_db(admin_pass, db):
@@ -234,7 +236,6 @@ def create_db(admin_pass, db):
                                 user=admin_user, is_removable=False)
     db.session.add(default_style)
     db.session.commit()
-
 
 
 @click.command("create-db")
