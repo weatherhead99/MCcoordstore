@@ -28,15 +28,9 @@ Created on Fri Dec 10 21:28:26 2021
 from .db import PointOfInterest
 import json
 
+
 def serialize_pois(app, db):
     pois = PointOfInterest.query.all()
     poilist = [_.serialize_to_dict() for _ in pois]
     return json.dumps(poilist)
 
-
-
-    
-    
-    
-    
-    

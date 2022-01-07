@@ -15,14 +15,10 @@
 # along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
 
-from flask import Blueprint, jsonify, current_app, request
-from flask.blueprints import BlueprintSetupState
-from flask_login import LoginManager, login_required, current_user
+from flask import Blueprint, jsonify, current_app
+from flask_login import login_required, current_user
 from .db import User, PointOfInterest, RenderStyle
-import base64
-from MCcoordstore import db
 from flask_restless import APIManager, ProcessingException
-from .serializers import POISerializer
 
 poi_api = Blueprint("poi", __name__)
 

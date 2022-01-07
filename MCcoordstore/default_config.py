@@ -25,6 +25,5 @@ Created on Fri Dec 10 22:19:38 2021
 """
 
 
-
 class DefaultConfig:
-    SQLALCHEMY_TRACK_MODIFICATIONS=False
+    SQLALCHEMY_TRACK_MODIFICATIONS = False
