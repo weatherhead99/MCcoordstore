@@ -20,6 +20,42 @@ function lookupRelationship(poiitem, jsondata, relname, attrname=null)
 }      
 
 
+function coords_column(row, item, rjson)
+{
+    for(let i=0; i < 3; i++)
+    {
+	row.insertCell(-1).innerHTML = item["attributes"]["coords"][i];
+    }
+}
+
+function user_display_column(row, item, rjson)
+{
+    const cell = row.insertCell(-1);
+    const dname = lookupRelationship(item, rjson, "user", "displayname");
+    cell.innerHTML = dname;
+}
+
+function create_date_column(row, item, rjson)
+{
+    const cell = row.insertCell(-1);
+    var createdat = new Date(item["attributes"]["create_date"].trim());
+    cell.innerHTML = createdat.toLocaleString();
+    
+}
+
+function edit_delete_columns(row, item, rjson)
+{
+    const poiid = item["id"];
+    const editcell = row.insertCell(-1);
+    const editlink = '<a href="/editpoi/' + poiid + '">edit</a>';
+    editcell.innerHTML = editlink;
+    var deletecell = row.insertCell(-1);
+    var deletelink = '<a href="/poi/delete/' + poiid + '">delete</a>';
+    deletecell.innerHTML = deletelink;
+}
+
+
+
 class POITable {
 
     constructor(filters = null, includevars = null) {
@@ -27,6 +63,13 @@ class POITable {
 	this.filters = filters;
 	this.style_data = new Map();
 	this.includes = includevars;
+
+	this.standard_columns = {
+	    "userdisplay" : user_display_column,
+	    "create_date" : create_date_column,
+	    "coords" : coords_column
+	};
+	
     }
 
     construct_params() {		
@@ -49,10 +92,52 @@ class POITable {
 	return params;
     }
 
+    clear_table(tblid) {
+	const tbl = document.getElementById(tblid);
+	//all rows except the first, which will be the headers
+	const rowarr = Array.prototype.slice.call(tbl.rows,1);
+	for(const row of rowarr)
+	    row.remove();
+	
+    }
 
+    prepare_table_data(tblid, rjson, columns)
+    {
+	const tbl = document.getElementById(tblid);
+	for(const item of rjson["data"])
+	{
+	    const attrs = item["attributes"];
+	    var row = tbl.insertRow(-1);
+	    row.className = "poi_row";
+	    for(const [colname, colfun] of columns.entries())
+	    {
+		if(colfun == null)
+		{
+		    var cell = row.insertCell(-1);
+		    cell.innerHTML = attrs[colname];
+		}
+		else if(colfun == "default")
+		{
+		    this.standard_columns[colname](row, item, rjson);
+		}
+		else
+		{
+		    colfun(row, item, rjson);
+		}
+		  
+	    }
+
+	}
+
+    }
+    
+
+    
     initfn() {};
     callbackfn(rjson) {};
     finalfn() {};
+
+    
     
     async fetch_pois(sortkey = null)
     {

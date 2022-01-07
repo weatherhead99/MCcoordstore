@@ -14,72 +14,45 @@
 
 <script>
   'use strict';
-  
-  function clearPOItable() {
-      var table = document.getElementById("list_of_pois");
-      var rowarr = Array.prototype.slice.call(table.rows,1);
-      for(const row of rowarr)
-	  row.remove();
-  };  
+
+
+  const columns = new Map();
+
+  columns.set("name", null);
+  columns.set("coords", "default");
+  columns.set("typename", null);
 
   const styles_to_render = new Map();
+  columns.set("stylepreview", function(row, item, rjson)
+	      {
+		  const stylecell = row.insertCell(-1);
+		  stylecell.setAttribute("class", "stylepreview");
+		  const styleid =
+			item["relationships"]["style"]["data"]["id"];
+		  const idstr = "renderpoi" + item["id"] + "style"  + styleid;
+		  stylecell.setAttribute("id", idstr);
+
+		 
+		  if(!styles_to_render.has(Number(styleid)))
+		      styles_to_render.set(Number(styleid), new Array());
+		  
+		  styles_to_render.get(Number(styleid)).push(stylecell);
+		     
+	      });
+
+  columns.set("userdisplay", "default");
+  columns.set("create_date", "default");
+  columns.set("editdelete", function(row, item, rjson)
+	      {
+		  const relid =
+			Number(item["relationships"]["user"]["data"]["id"]);
+		  const myuserid = Number(document.getElementById("current_user_id").innerHTML);
+		  if(relid == myuserid)
+		  {
+		      edit_delete_columns(row, item, rjson);
+		  }
+	      });
   
-  function fillPOItable(jsondata) {
-      var table = document.getElementById("list_of_pois");
-      var myuserid = document.getElementById("current_user_id").innerHTML;
-      for(const item of jsondata["data"])
-      {
-	  const attrs = item["attributes"];
-	  var row = table.insertRow(-1);
-	  row.className = "poi_row";
-	  var namecell = row.insertCell(-1);
-	  namecell.innerHTML = attrs["name"];
-
-	  for(let i=0; i<3; i++)
-	      row.insertCell(-1).innerHTML = attrs["coords"][i];
-	  
-	  //TODO: do this lookup on client side, probably
-	  var typecell = row.insertCell(-1);
-	  typecell.innerHTML = attrs["typename"];
-
-	  var  stylepreview = row.insertCell(-1);
-	  stylepreview.setAttribute("class", "stylepreview");
-	  const styleid = item["relationships"]["style"]["data"]["id"];
-	  const  idstr = "renderpoi" + item["id"] + "style" + styleid;
-	  stylepreview.setAttribute("id",idstr);
-
-	  if (!styles_to_render.has(Number(styleid)))
-	      styles_to_render.set(Number(styleid),  new Array());
-	  styles_to_render.get(Number(styleid)).push(stylepreview);
-	  
-	  var usercell = row.insertCell(-1);
-	  var userdisplay = lookupRelationship(item, jsondata, "user", "displayname");
-	  
-	  usercell.innerHTML = userdisplay;
-
-	  var datecell = row.insertCell(-1);
-	  var createdat = new Date(attrs["create_date"].trim());
-	  datecell.innerHTML = createdat.toLocaleString();
-
-	  if(Number(item["relationships"]["user"]["data"]["id"]) == Number(myuserid))
-	  {
-	      var poiid = item["id"]
-	      var editcell = row.insertCell(-1);
-	      var editlink = '<a href="/editpoi/' + poiid + '">edit</a>';
-	      editcell.innerHTML = editlink;
-	      
-	      var deletecell = row.insertCell(-1);
-
-	      var deletelink ='<a href="/poi/delete/' + poiid + '">delete</a>';
-	      deletecell.innerHTML = deletelink;
-   
-	  }
-
-      }
-  };
-
-
-
   function plotpoints(jsondata)
   {
       for(const item of jsondata["data"])
@@ -140,11 +113,11 @@
 	  styles_to_render.clear();
 	  netherplot.clearPlot();
 	  overworldplot.clearPlot();
-	  clearPOItable();
+	  this.clear_table("list_of_pois");
       }
 	  
       callbackfn(rjson) {
-	  fillPOItable(rjson);
+	  this.prepare_table_data("list_of_pois", rjson, columns);
 	  plotpoints(rjson);
       }
 
