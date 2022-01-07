@@ -13,11 +13,12 @@
 {% block content %}
 
 <script>
+  'use strict';
   
   function clearPOItable() {
       var table = document.getElementById("list_of_pois");
       var rowarr = Array.prototype.slice.call(table.rows,1);
-      for(row of rowarr)
+      for(const row of rowarr)
 	  row.remove();
   };  
 
@@ -26,7 +27,7 @@
   function fillPOItable(jsondata) {
       var table = document.getElementById("list_of_pois");
       var myuserid = document.getElementById("current_user_id").innerHTML;
-      for(item of jsondata["data"])
+      for(const item of jsondata["data"])
       {
 	  const attrs = item["attributes"];
 	  var row = table.insertRow(-1);
@@ -81,7 +82,7 @@
 
   function plotpoints(jsondata)
   {
-      for(item of jsondata["data"])
+      for(const item of jsondata["data"])
       {
 	  var attrs = item["attributes"];
 	  var txt = attrs["name"];
@@ -101,6 +102,7 @@
   };
 
   const rdr = new PlotlyShapeRenderer();
+
   function render_all_styles(styledata)
   {
       const sizes = Array.from(styledata.values()).map(x => x["marker.size"]);
@@ -128,45 +130,31 @@
       
   }
 
-  const ptblfill = new POITable();
-  const style_data = new Map();
+  const includes = {user : ["displayname"],
+		    style : ["styleid", "style"]};
   
-  function tbl_init(poifiller) {
-      styles_to_render.clear();
-      netherplot.clearPlot();
-      overworldplot.clearPlot();
-      clearPOItable();
-  };
 
-  function tbl_callback(poifiller, rjson)
+  class fullPOITable extends POITable
   {
-      fillPOItable(rjson);
-      plotpoints(rjson);
-      
-      for(item of rjson["included"].filter(x=>x["type"]=="style"))
-      {
-	  const styleid = Number(item["id"]);
-	  if( ! style_data.has(styleid))
-	  {
-	      const stylestyle = item["attributes"]["style"];
-	      style_data.set(styleid, stylestyle)
-	  }
+      initfn() {
+	  styles_to_render.clear();
+	  netherplot.clearPlot();
+	  overworldplot.clearPlot();
+	  clearPOItable();
       }
-      
+	  
+      callbackfn(rjson) {
+	  fillPOItable(rjson);
+	  plotpoints(rjson);
+      }
+
+      finalfn() {
+	  render_all_styles(this.style_data);
+      }
   };
 
-  function tbl_final(poifiller)
-  {
-      render_all_styles(style_data);
-  }
-  
-  async function fetch_pois(sortkey = null) {
-      await ptblfill.fetch_pois(tbl_init, tbl_callback, tbl_final, sortkey);
-  }
-
-  
-
-  
+  const ptblfill = new fullPOITable(null, includes);
+   
 </script>
 
 
@@ -226,19 +214,19 @@
 <div id="current_user_id" hidden>{{current_user.userid}}</div>
 
 <table class="poi_list" id="list_of_pois">
-  <th onclick="fetch_pois('name')">Name</th>
-  <th onclick="fetch_pois('coord_x')">X</th>
-  <th onclick="fetch_pois('coord_y')">Y</th>
-  <th onclick="fetch_pois('coord_z')">Z</th>
-  <th onclick="fetch_pois('coordtype')">type</th>
+  <th onclick="ptblfill.fetch_pois('name')">Name</th>
+  <th onclick="ptblfill.fetch_pois('coord_x')">X</th>
+  <th onclick="ptblfill.fetch_pois('coord_y')">Y</th>
+  <th onclick="ptblfill.fetch_pois('coord_z')">Z</th>
+  <th onclick="ptblfill.fetch_pois('coordtype')">type</th>
   <!--<th onclick="fetch_pois('style.name')">style name </th>-->
   <th>style preview</th>
-  <th onclick="fetch_pois('user.displayname')">created by</th>
-  <th onclick="fetch_pois('create_date')">created at</th>
+  <th onclick="ptblfill.fetch_pois('user.displayname')">created by</th>
+  <th onclick="ptblfill.fetch_pois('create_date')">created at</th>
 </table>
 
 <script>
-  fetch_pois("name");
+  ptblfill.fetch_pois("name");
 
   function parsepastedcoords(txt) {
       const  loc = txt.search("@s");

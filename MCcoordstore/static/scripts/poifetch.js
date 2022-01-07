@@ -22,18 +22,44 @@ function lookupRelationship(poiitem, jsondata, relname, attrname=null)
 
 class POITable {
 
-    constructor() {
+    constructor(filters = null, includevars = null) {
 	this.ordermap = new Map();
+	this.filters = filters;
+	this.style_data = new Map();
+	this.includes = includevars;
     }
 
-    async fetch_pois(initfn, callbackfn, finalfn, sortkey = null)
+    construct_params() {		
+	const params = [["page[number]", "1"] ];
+	if(this.includes != null)
+	{
+	    const paramout = {"include" : []};
+	    for(const [objtype, fieldlist] of Object.entries(this.includes))
+	    {
+		paramout["include"].push(objtype);
+		let st = "fields[" + objtype + "]";
+		paramout[st] = fieldlist;
+	    }
+
+	    for(const [k,v] of Object.entries(paramout))
+	    {
+		params.push([k, paramout[k].join(",")]);
+	    }
+	}
+	return params;
+    }
+
+
+    initfn() {};
+    callbackfn(rjson) {};
+    finalfn() {};
+    
+    async fetch_pois(sortkey = null)
     {
 	let url = new URL("/api/poi", document.URL)
-	const params = [["page[number]", "1"], ["include", "user,style"],
-			["fields[user]", "displayname"],
-			["fields[style]", "name,style"]];
 
-	initfn(this);
+	const params = this.construct_params();
+	this.initfn();
 	
 	if(sortkey != null)
 	{
@@ -52,6 +78,12 @@ class POITable {
 	    }
 	    params.push(["sort", String(sortkey)]);
 	}
+
+	if(this.filters != null)
+	{
+	    params.push(["filter[objects]", JSON.stringify(this.filters)]);
+	}
+	
 	url.search = new URLSearchParams(params).toString();
 
 	for(;;)
@@ -59,7 +91,22 @@ class POITable {
 	    const response = await fetch(url, DEFAULT_API_OPTIONS);
 	    const rjson = await response.json();
 
-	    callbackfn(this, rjson);
+	    if(rjson.hasOwnProperty("errors"))
+	    {
+		throw rjson["errors"]; 
+	    }
+
+	    this.callbackfn(rjson);
+	    for(const item of rjson["included"].filter(x=>x["type"]=="style"))
+	    {
+		const styleid = Number(item["id"]);
+		if(! this.style_data.has(styleid))
+		{
+		    const stylestyle = item["attributes"]["style"];
+		    this.style_data.set(styleid, stylestyle);
+		}
+
+	    }
 
 	    if(rjson["links"]["next"] == null)
 		break;
@@ -67,7 +114,7 @@ class POITable {
 	    
 	}
 
-	finalfn(this);
+	this.finalfn();
     }
     
 
